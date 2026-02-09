@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iRhZi | Secure Checkout</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --card-bg: #0a0a0a;
+            --accent: #00f2ff;
+            --text-dim: #666;
+            --border: #1a1a1a;
+            --input-bg: #000;
+        }
+
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; background-color: var(--bg); font-family: 'Inter', sans-serif; color: white; overflow-x: hidden; }
+        .checkout-container { display: flex; min-height: 100vh; flex-wrap: wrap; }
+
+        /* Panel Styling */
+        .info-panel { flex: 1 1 600px; padding: 60px 8%; border-right: 1px solid var(--border); }
+        .logo { 
+            display: flex;
+            align-items: center;
+            height: auto;
+            transition: opacity 0.3s ease;
+        }
+        
+        .logo:hover {
+            opacity: 0.8;
+        }
+
+        .logo-img {
+            height: 44px; /* Adjust this to make the logo larger or smaller */
+            width: auto;
+            display: block;
+            /* Inverting if the logo is black to make it white, 
+               or keep it as is if it's already white */
+            filter: brightness(0) invert(1); 
+        }
+        /* .logo { font-size: 24px; font-weight: 900; letter-spacing: 5px; text-decoration: none; color: #fff; display: block; margin-bottom: 40px; } */
+        .form-section { margin-bottom: 40px; }
+        h3 { font-size: 11px; letter-spacing: 3px; color: var(--text-dim); margin-bottom: 20px; font-weight: 800; text-transform: uppercase; }
+        input { width: 100%; padding: 16px; margin-bottom: 12px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 14px; transition: 0.3s; }
+        input:focus { border-color: var(--accent); outline: none; }
+        .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* Donation & Payment */
+        .donation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+        .don-opt { padding: 12px; border: 1px solid var(--border); border-radius: 6px; text-align: center; cursor: pointer; font-size: 12px; font-weight: 700; transition: 0.2s; background: var(--input-bg); }
+        .don-opt.active { border-color: var(--accent); color: var(--accent); background: rgba(0, 242, 255, 0.05); }
+        .payment-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .pay-option { padding: 15px; border: 1px solid var(--border); border-radius: 8px; text-align: center; cursor: pointer; font-size: 11px; font-weight: 700; background: var(--card-bg); }
+        .pay-option.active { border-color: var(--accent); color: var(--accent); }
+        #card-details, #upi-details { display: none; padding: 20px; background: #080808; border-radius: 8px; border: 1px solid #111; margin-bottom: 20px; }
+        #card-details.visible, #upi-details.visible { display: block; }
+
+        /* Summary Panel */
+        .summary-panel { flex: 1 1 400px; background: var(--card-bg); padding: 60px 5%; position: sticky; top: 0; height: auto; display: flex; flex-direction: column; }
+        #order-items-list { flex: 1; overflow-y: auto; margin-bottom: 30px; }
+        .summary-item { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #151515; }
+        /* .item-thumb { width: 40px; height: 40px; background: #111; border-radius: 4px; } */
+        /* Update the Summary Panel Thumbnail */
+.item-thumb { 
+    width: 50px; 
+    height: 50px; 
+    background: #000; 
+    border-radius: 4px; 
+    border-left: 4px solid #333; /* Default color */
+    flex-shrink: 0; 
+}
+        .pricing-table { border-top: 1px solid var(--border); padding-top: 25px; }
+        .price-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: #888; }
+        .price-row.total { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 28px; font-weight: 900; color: #fff; }
+        
+        .primary-btn { width: 100%; background: var(--accent); color: #000; padding: 20px; border: none; border-radius: 8px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.3s; margin-top: 20px;}
+        .primary-btn:disabled { background: #1a1a1a; color: #444; }
+
+        #success-overlay { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        #success-overlay.active { display: flex; }
+
+        /* --- STABLE PRINT STYLING --- */
+        #invoice-template { 
+            position: absolute; 
+            left: -9999px; 
+            top: 0;
+            width: 190mm; /* Narrower than A4 to prevent side-bleeding in portrait */
+            background: white !important;
+            color: black !important;
+            padding: 20px;
+        }
+
+        @media print {
+            @page { size: portrait; margin: 0; }
+            body { background: white; }
+            .checkout-container, #success-overlay { display: none !important; }
+            #invoice-template { 
+                position: relative; 
+                left: 0; 
+                margin: 0 auto;
+                display: block !important; 
+                visibility: visible;
+            }
+            #invoice-template * { visibility: visible; }
+        }
+
+        .inv-table { width: 100%; border-collapse: collapse; margin-top: 20px; border: 1px solid #000; }
+        .inv-table th { background: #f0f0f0 !important; border: 1px solid #000; padding: 10px; font-size: 11px; text-transform: uppercase; color: black; }
+        .inv-table td { border: 1px solid #000; padding: 12px 10px; font-size: 11px; vertical-align: top; color: black; }
+        .spec-line { font-size: 9px; color: #444; display: block; margin-top: 5px; line-height: 1.4; font-weight: normal; }
+    </style>
+</head>
+<body>
+
+    <div id="success-overlay">
+        <h1 style="color: var(--accent); font-size: 40px; letter-spacing: -2px;">TRANSACTION SECURED</h1>
+        <p style="color: #666; letter-spacing: 2px; margin-bottom: 30px;">ECOSYSTEM DEPLOYMENT COMMENCING.</p>
+        <div style="display: flex; gap: 15px;">
+            <button onclick="window.print()" class="primary-btn" style="width: auto; padding: 15px 40px; background: white;">Download PDF</button>
+            <a href="index.html" class="primary-btn" style="text-decoration: none; width: auto; padding: 15px 40px;">Return to Hub</a>
+        </div>
+    </div>
+
+    <div class="checkout-container">
+        <section class="info-panel">
+            <a href="index.html" class="logo">
+            <img src="Untitled-2.png" alt="iRhZi Logo" class="logo-img">
+        </a>
+            <form id="checkout-form">
+                <div class="form-section">
+                    <h3>Contact & Destination</h3>
+                    <input type="email" id="email" placeholder="Email Address" required>
+                    <div class="input-group">
+                        <input type="text" id="fname" placeholder="First Name" required>
+                        <input type="text" id="lname" placeholder="Last Name" required>
+                    </div>
+                    <input type="text" id="addr" placeholder="Street Address" required>
+                    <div class="input-group">
+                        <input type="text" id="city" placeholder="City" required>
+                        <input type="text" id="pin" placeholder="PIN Code" maxlength="6" required>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Donate to Charity</h3>
+                    <div class="donation-grid">
+                        <div class="don-opt" onclick="setDonation(0, this)">0%</div>
+                        <div class="don-opt" onclick="setDonation(0.01, this)">1%</div>
+                        <div class="don-opt" onclick="setDonation(0.02, this)">2%</div>
+                        <div class="don-opt" onclick="setDonation(0.05, this)">5%</div>
+                        <div class="don-opt" onclick="setDonation(0.10, this)">10%</div>
+                        <div class="don-opt" id="custom-don-btn" onclick="toggleCustomDonation(this)">Custom</div>
+                    </div>
+                    <input type="number" id="custom-donation-input" placeholder="Enter Rs. amount" style="display:none;" min="0" oninput="calculateTotals()">
+                </div>
+
+                <div class="form-section">
+                    <h3>Payment Method</h3>
+                    <div class="payment-toggle">
+                        <div class="pay-option" id="btn-card" onclick="setPayment('card')">CREDIT CARD</div>
+                        <div class="pay-option" id="btn-upi" onclick="setPayment('upi')">UPI</div>
+                    </div>
+                    <div id="card-details">
+                        <input type="text" id="card-num" placeholder="Card Number" maxlength="16">
+                        <div class="input-group">
+                            <input type="text" id="card-exp" placeholder="MM/YY" maxlength="5">
+                            <input type="password" id="card-cvv" placeholder="CVV" maxlength="3">
+                        </div>
+                    </div>
+                    <div id="upi-details">
+                        <input type="text" id="upi-id" placeholder="id@bank">
+                    </div>
+                </div>
+
+                <button type="submit" class="primary-btn" id="main-submit-btn" disabled>Confirm Payment</button>
+            </form>
+        </section>
+
+        <aside class="summary-panel">
+            <div id="order-items-list"></div>
+            <div class="pricing-table">
+                <div class="price-row"><span>Subtotal</span><span id="subtotal">₹0</span></div>
+                <div class="price-row"><span>GST (18%)</span><span id="tax-amount">₹0</span></div>
+                <div class="price-row"><span>Shipping</span><span id="shipping-cost">₹0</span></div>
+                <div class="price-row"><span>Philanthropy</span><span id="donation-amount">₹0</span></div>
+                <div class="price-row total"><span>Total</span><span id="grand-total">₹0</span></div>
+            </div>
+        </aside>
+    </div>
+
+    <div id="invoice-template">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+            <div>
+                <h1 style="margin:0; letter-spacing:5px; font-weight:900;">iRhZi</h1>
+                <p style="font-size:10px; color:#666; margin:5px 0;">ORIGINAL TAX INVOICE</p>
+            </div>
+            <div style="text-align:right">
+                <p style="font-size:11px; margin:2px 0;"><strong>Invoice No:</strong> <span id="inv-no"></span></p>
+                <p style="font-size:11px; margin:2px 0;"><strong>Date:</strong> <span id="inv-date"></span></p>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; gap: 40px; margin-bottom: 30px; font-size: 11px;">
+            <div style="flex: 1;">
+                <p style="text-transform:uppercase; font-weight:800; color:#888; margin-bottom:5px;">Sold By:</p>
+                <p><strong>IRhZI</strong><br>doofINC Town<br>Copenhagen, Denmark - 1053</p>
+            </div>
+            <div style="flex: 1; text-align:right">
+                <p style="text-transform:uppercase; font-weight:800; color:#888; margin-bottom:5px;">Billing/Shipping Address:</p>
+                <p><strong id="inv-client-name"></strong><br><span id="inv-client-addr"></span></p>
+            </div>
+        </div>
+
+        <table class="inv-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">S.No</th>
+                    <th>Item Description</th>
+                    <th style="width: 100px; text-align: right;">Rate</th>
+                    <th style="width: 60px; text-align: center;">Qty</th>
+                    <th style="width: 100px; text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody id="inv-items-body"></tbody>
+        </table>
+
+        <div style="margin-left: auto; width: 250px; margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0;">
+                <span>Subtotal:</span> <span id="inv-sub"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0;">
+                <span>GST (18%):</span> <span id="inv-tax"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0;">
+                <span>Shipping:</span> <span id="inv-ship"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0;">
+                <span>Philanthropy:</span> <span id="inv-don"></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 900; border-top: 2px solid #000; padding-top: 8px; margin-top: 8px;">
+                <span>Grand Total:</span> <span id="inv-grand"></span>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; font-size: 9px; color: #777; border-top: 1px solid #eee; padding-top: 15px; line-height: 1.4;">
+            <p><strong>Declaration:</strong> We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct. All units are Final Sale.</p>
+            <p style="text-align: center; margin-top: 20px;">COMPUTER GENERATED DOCUMENT - NO SIGNATURE REQUIRED</p>
+        </div>
+    </div>
+
+ <script>
+    let currentMethod = null;
+    let donationPercent = 0;
+    let bagData = [];
+
+    function setDonation(val, el) {
+        donationPercent = val;
+        document.getElementById('custom-donation-input').style.display = 'none';
+        document.querySelectorAll('.don-opt').forEach(opt => opt.classList.remove('active'));
+        el.classList.add('active');
+        calculateTotals();
+    }
+
+    function toggleCustomDonation(el) {
+        donationPercent = -1;
+        document.querySelectorAll('.don-opt').forEach(opt => opt.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('custom-donation-input').style.display = 'block';
+        calculateTotals();
+    }
+
+    function calculateTotals() {
+        let subtotal = 0;
+        bagData.forEach(item => {
+            subtotal += parseInt(item.price.replace(/[₹,]/g, '')) * item.quantity;
+        });
+        const gst = subtotal * 0.18;
+        let shipping = (subtotal >= 500000 || subtotal === 0) ? 0 : (subtotal < 100000) ? subtotal * 0.05 : subtotal * 0.01;
+        let donationVal = parseFloat(document.getElementById('custom-donation-input').value) || 0;
+        let donation = donationPercent === -1 ? Math.max(0, donationVal) : (subtotal * donationPercent);
+        const finalTotal = subtotal + gst + shipping + donation;
+
+        document.getElementById('subtotal').innerText = `₹${subtotal.toLocaleString()}`;
+        document.getElementById('tax-amount').innerText = `₹${Math.round(gst).toLocaleString()}`;
+        document.getElementById('shipping-cost').innerText = shipping === 0 ? "FREE" : `₹${Math.round(shipping).toLocaleString()}`;
+        document.getElementById('donation-amount').innerText = `₹${Math.round(donation).toLocaleString()}`;
+        document.getElementById('grand-total').innerText = `₹${Math.round(finalTotal).toLocaleString()}`;
+        validate();
+    }
+
+    function setPayment(type) {
+        currentMethod = type;
+        document.getElementById('card-details').classList.toggle('visible', type === 'card');
+        document.getElementById('upi-details').classList.toggle('visible', type === 'upi');
+        document.getElementById('btn-card').classList.toggle('active', type === 'card');
+        document.getElementById('btn-upi').classList.toggle('active', type === 'upi');
+        validate();
+    }
+
+    function validate() {
+        const core = ['email', 'fname', 'addr', 'pin'].every(id => document.getElementById(id).value.trim().length > 0);
+        let pay = (currentMethod === 'card' && document.getElementById('card-num').value.length === 16) || 
+                  (currentMethod === 'upi' && document.getElementById('upi-id').value.includes('@'));
+        document.getElementById('main-submit-btn').disabled = !(core && pay);
+    }
+    const modelColors = {
+    'Port': '#d45d00', 'Play': '#00ff00', 'Station': '#8a2be2',
+    'L': '#ffff00', 'Base': '#0000ff', 'X': '#ff0000'
+};
+
+function getModelColor(model) {
+    for (let key in modelColors) { if (model.includes(key)) return modelColors[key]; }
+    return '#333';
+}
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const rawBag = JSON.parse(localStorage.getItem('iRhZi_bag')) || [];
+        const list = document.getElementById('order-items-list');
+        
+        // Match grouping logic with manifest.html
+        rawBag.forEach(item => {
+            const itemSpecs = item.type === 'deltop' 
+                ? `${item.zeta}-${item.ram}-${item.ssd}` 
+                : `${item.engine}-${item.umg}`;
+
+            const existing = bagData.find(g => 
+                g.model === item.model && 
+                g.color === item.color && 
+                (g.type === 'deltop' ? `${g.zeta}-${g.ram}-${g.ssd}` : `${g.engine}-${g.umg}`) === itemSpecs
+            );
+
+            if (existing) {
+                existing.quantity++;
+            } else {
+                bagData.push({...item, quantity: 1});
+            }
+        });
+
+        bagData.forEach(item => {
+            const color = getModelColor(item.model); // Get the specific color
+            const unitPrice = parseInt(item.price.replace(/[₹,]/g, ''));
+            const subtotal = unitPrice * item.quantity;
+            const displayModel = (item.model === 'Base' || item.model == 'L' || item.model == 'X') ? (item.model === 'Base') ? `${item.year}` : `${item.year}${item.model}` :item.model.toUpperCase();
+
+
+            list.innerHTML += `<div class="summary-item">
+<div class="item-thumb" style="border-left-color: ${color}"></div>                <div class="item-info">
+<h4 style="margin:0; font-size:13px; letter-spacing:1px; color:#fff;">${displayModel}</h4>                    <p style="margin:0; font-size:10px; color:#555;">${item.type.toUpperCase()} | QTY: ${item.quantity}</p>
+                </div>
+                <div style="margin-left:auto; font-size:13px;">₹${(parseInt(item.price.replace(/[₹,]/g, '')) * item.quantity).toLocaleString()}</div>
+            </div>`;
+        });
+        calculateTotals();
+        document.querySelectorAll('input').forEach(i => i.addEventListener('input', validate));
+        document.getElementById('custom-donation-input').addEventListener('input', function() {
+    if (this.value < 0) this.value = 0;
+});
+    });
+
+    document.getElementById('checkout-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        document.getElementById('inv-client-name').innerText = `${document.getElementById('fname').value} ${document.getElementById('lname').value}`.toUpperCase();
+        document.getElementById('inv-client-addr').innerText = `${document.getElementById('addr').value}, ${document.getElementById('city').value} - ${document.getElementById('pin').value}`;
+        document.getElementById('inv-date').innerText = new Date().toLocaleDateString('en-IN');
+        document.getElementById('inv-no').innerText = "HZ-" + Math.floor(100000 + Math.random() * 900000);
+
+        const invBody = document.getElementById('inv-items-body');
+        invBody.innerHTML = '';
+
+        bagData.forEach((item, index) => {
+            let specs = "";
+            const modelDisplay = (item.model === 'Base' || item.model == 'L' || item.model == 'X') 
+        ? (item.model === 'Base' ? `${item.year}` : `${item.year}${item.model}`) 
+        : item.model.toUpperCase();
+            // Replicating manifest display logic for the invoice
+            if (item.type.toLowerCase() === 'deltop') {
+                const thetaLine = item.theta ? `${item.theta}` : '';
+                specs = `Finish: ${item.color} | Body: ${item.size} | Engine: ${item.zeta} ${thetaLine} ${item.ram}/${item.ssd}`;
+            } else {
+                specs = `Finish: ${item.color} | Engine: ${item.engine} | UMG: ${item.umg}`;
+            }
+
+            invBody.innerHTML += `<tr>
+                <td style="text-align:center">${index + 1}</td>
+                <td><strong style="font-size:12px;">${item.type.toUpperCase()} ${modelDisplay}</strong><br><span class="spec-line">${specs}</span></td>
+                <td style="text-align:right">${item.price}</td>
+                <td style="text-align:center">${item.quantity}</td>
+                <td style="text-align:right">₹${(parseInt(item.price.replace(/[₹,]/g, '')) * item.quantity).toLocaleString()}</td>
+            </tr>`;
+        });
+
+        document.getElementById('inv-sub').innerText = document.getElementById('subtotal').innerText;
+        document.getElementById('inv-tax').innerText = document.getElementById('tax-amount').innerText;
+        document.getElementById('inv-ship').innerText = document.getElementById('shipping-cost').innerText;
+        document.getElementById('inv-don').innerText = document.getElementById('donation-amount').innerText;
+        document.getElementById('inv-grand').innerText = document.getElementById('grand-total').innerText;
+
+        // Visual feedback before print
+        document.getElementById('main-submit-btn').innerText = "PROCESSING...";
+        
+        setTimeout(() => {
+            window.print();
+            document.getElementById('success-overlay').classList.add('active');
+            localStorage.removeItem('iRhZi_bag');
+        }, 800);
+    });
+</script>
+</body>
+</html>

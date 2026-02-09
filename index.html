@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iRhZi | The Ecosystem</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --deltop-grad: linear-gradient(135deg, #d45d00 0%, #1b4d3e 50%, #4b0082 100%);
+            --alphone-grad: linear-gradient(135deg, #b8860b 0%, #003366 50%, #8b0000 100%);
+            --deltop-glow: rgba(212, 93, 0, 0.3);
+            --alphone-glow: rgba(0, 51, 102, 0.4);
+            --nav-bg: rgba(5, 5, 5, 0.9);
+            --transition: 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        /* Previous Styles Maintained */
+        * { box-sizing: border-box; cursor: none !important; }
+        body, html { margin: 0; padding: 0; background-color: var(--bg); font-family: 'Inter', -apple-system, sans-serif; color: white; scroll-behavior: smooth; overflow-x: hidden; }
+        
+        #custom-cursor { position: fixed; top: 0; left: 0; width: 20px; height: 20px; border: 1px solid rgba(255,255,255,0.5); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: width 0.3s, height 0.3s, border-radius 0.3s, background 0.3s; mix-blend-mode: difference; }
+        .deltop-mode #custom-cursor { width: 40px; height: 40px; background: var(--deltop-grad); border: none; border-radius: 8px; }
+        .alphone-mode #custom-cursor { width: 60px; height: 60px; background: var(--alphone-grad); border: none; }
+
+        nav { position: fixed; top: 0; width: 100%; height: 70px; display: flex; justify-content: space-between; align-items: center; padding: 0 50px; background: var(--nav-bg); backdrop-filter: blur(20px); border-bottom: 1px solid #111; z-index: 100; }
+        /* .logo { font-weight: 900; letter-spacing: 5px; font-size: 16px; text-decoration: none; color: #fff; } */
+        .nav-links { display: flex; gap: 40px; align-items: center; }
+        .nav-links a { text-decoration: none; color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+        .nav-links a:hover { color: #fff; }
+        .cart-status { font-size: 10px; font-weight: 800; color: #fff; border: 1px solid #222; padding: 8px 16px; border-radius: 30px; transition: 0.3s; }
+
+        .hero { height: 100vh; width: 100vw; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; text-align: center; }
+        .hero h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 10px; color: #444; margin-bottom: 20px; }
+        .hero h1 { font-size: clamp(80px, 18vw, 200px); font-weight: 900; margin: 0; letter-spacing: -8px; color: #111; transition: var(--transition); }
+        .deltop-section:hover h1 { background: var(--deltop-grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 10px 40px var(--deltop-glow)); }
+        .alphone-section:hover h1 { background: var(--alphone-grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 10px 40px var(--alphone-glow)); }
+
+        .cta-group { margin-top: 50px; display: flex; gap: 15px; }
+        .btn { padding: 18px 40px; border-radius: 40px; text-decoration: none; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); border: none;}
+        .btn-deltop { background: var(--deltop-grad); color: white; }
+        .btn-alphone { background: var(--alphone-grad); color: white; }
+        .btn-outline { border: 1px solid #222; color: #888; background: transparent;}
+        .btn-outline:hover { border-color: #fff; color: #fff; }
+        .btn:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+
+        /* CART STYLES */
+        #cart-items-list { max-height: calc(100vh - 350px); overflow-y: auto; padding-right: 10px; }
+        #cart-items-list::-webkit-scrollbar { width: 4px; }
+        #cart-items-list::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
+
+        .color-port { border-left-color: #d45d00 !important; }
+        .color-play { border-left-color: #00ff00 !important; }
+        .color-station { border-left-color: #8a2be2 !important; }
+        .color-l { border-left-color: #ffff00 !important; }
+        .color-base { border-left-color: #0000ff !important; }
+        .color-x { border-left-color: #ff0000 !important; }
+
+        #cart-sidebar { position: fixed; top: 0; right: -450px; width: 400px; height: 100vh; background: #0a0a0a; border-left: 1px solid #1a1a1a; z-index: 1001; transition: 0.5s cubic-bezier(0.23, 1, 0.32, 1); padding: 40px; }
+        #cart-sidebar.open { right: 0; }
+        .cart-item { background: #111; padding: 20px; border-radius: 12px; margin-bottom: 15px; border-left: 4px solid #333; position: relative; }
+        
+        /* NEW REMOVE BUTTON STYLE */
+        .remove-btn { 
+            background: transparent; border: none; color: #444; font-size: 9px; 
+            text-transform: uppercase; letter-spacing: 1px; padding: 5px 0; 
+            transition: 0.3s; margin-top: 10px; font-weight: 800;
+        }
+        .remove-btn:hover { color: #ff3b30; }
+
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 1000; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1); }
+        #loader.active { transform: translateY(0); }
+        #cart-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); opacity: 0; pointer-events: none; z-index: 1000; transition: 0.5s; }
+        #cart-overlay.open { opacity: 1; pointer-events: auto; }
+        .btn:disabled { pointer-events: none; filter: grayscale(1); border-color: #222; color: #444; }
+        .logo { 
+            display: flex;
+            align-items: center;
+            height: 100%;
+            transition: opacity 0.3s ease;
+        }
+        
+        .logo:hover {
+            opacity: 0.8;
+        }
+
+        .logo-img {
+            height: 44px; /* Adjust this to make the logo larger or smaller */
+            width: auto;
+            display: block;
+            /* Inverting if the logo is black to make it white, 
+               or keep it as is if it's already white */
+            filter: brightness(0) invert(1); 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="custom-cursor"></div>
+    <div id="loader"></div>
+    <div id="cart-overlay" onclick="toggleCart()"></div>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <img src="Untitled-2.png" alt="iRhZi Logo" class="logo-img">
+        </a>
+        <div class="nav-links">
+            <a href="#deltop">Deltop</a>
+            <a href="#alphone">Alphone</a>
+            <span class="cart-status" id="cart-count" onclick="toggleCart()">BAG (0)</span>
+        </div>
+    </nav>
+
+    <!-- <nav>
+        <a href="#" class="logo">iRhZi</a>
+        <div class="nav-links">
+            <a href="#deltop">Deltop</a>
+            <a href="#alphone">Alphone</a>
+            <span class="cart-status" id="cart-count" onclick="toggleCart()">BAG (0)</span>
+        </div>
+    </nav> -->
+
+    <div id="cart-sidebar">
+        <h2 style="font-size: 12px; letter-spacing: 4px; color: #444; margin-bottom: 40px;">YOUR BAG</h2>
+        <div id="cart-items-list"></div>
+        <div style="position: absolute; bottom: 40px; width: calc(100% - 80px);">
+            <div id="cart-grand-total" style="font-size: 32px; font-weight: 900; margin-bottom: 20px;">₹0</div>
+            <div style="display: flex; gap: 10px;">
+                <button id="btn-manifest" class="btn btn-outline" style="flex: 1; text-align: center; padding: 18px 0;" onclick="window.location.href='manifest.html'">Manifest All</button>
+                <button id="btn-checkout" class="btn btn-deltop" style="flex: 1; text-align: center; padding: 18px 0;" onclick="window.location.href='checkout.html'">Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <section class="hero deltop-section" id="deltop" onmouseenter="document.body.className='deltop-mode'" onmouseleave="document.body.className=''">
+        <h2>Workstation Class</h2>
+        <h1>DELTOP</h1>
+        <div class="cta-group">
+            <a href="#" class="btn btn-deltop" onclick="navigate(event, 'deltop.html')">Build Yours</a>
+            <a href="specs.html" class="btn btn-outline">Specs</a>
+        </div>
+    </section>
+
+    <section class="hero alphone-section" id="alphone" onmouseenter="document.body.className='alphone-mode'" onmouseleave="document.body.className=''">
+        <h2>Mobile Precision</h2>
+        <h1>ALPHONE</h1>
+        <div class="cta-group">
+            <a href="#" class="btn btn-alphone" onclick="navigate(event, 'alphone.html')">Build Yours</a>
+            <a href="specs.html" class="btn btn-outline">Specs</a>
+        </div>
+    </section>
+
+    <script>
+        const cursor = document.getElementById('custom-cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        function navigate(e, url) {
+            e.preventDefault();
+            const loader = document.getElementById('loader');
+            loader.style.background = url.includes('deltop') ? 'var(--deltop-grad)' : 'var(--alphone-grad)';
+            loader.classList.add('active');
+            setTimeout(() => { window.location.href = url; }, 600);
+        }
+
+        function toggleCart() {
+            document.getElementById('cart-sidebar').classList.toggle('open');
+            document.getElementById('cart-overlay').classList.toggle('open');
+            renderCart();
+        }
+
+        // REMOVE ITEM FUNCTION
+        function removeItem(model, color, specsStr) {
+    let bag = JSON.parse(localStorage.getItem('iRhZi_bag')) || [];
+    
+    // Find the first item that matches all identifying criteria
+    const index = bag.findIndex(item => {
+        const itemSpecs = item.type === 'deltop' 
+            ? `${item.zeta}-${item.ram}-${item.ssd}` 
+            : `${item.engine}-${item.umg}`;
+        return item.model === model && item.color === color && itemSpecs === specsStr;
+    });
+
+    if (index !== -1) {
+        bag.splice(index, 1);
+        localStorage.setItem('iRhZi_bag', JSON.stringify(bag));
+        renderCart();
+    }
+}
+
+        function renderCart() {
+    const list = document.getElementById('cart-items-list');
+    const rawBag = JSON.parse(localStorage.getItem('iRhZi_bag')) || [];
+    list.innerHTML = rawBag.length ? '' : '<div style="color:#333; letter-spacing:2px; margin-top:20px;">BAG IS EMPTY</div>';
+    
+    let grandTotal = 0;
+    const groupedBag = [];
+
+    // Grouping Logic
+    rawBag.forEach(item => {
+        const itemSpecs = item.type === 'deltop' 
+            ? `${item.zeta}-${item.ram}-${item.ssd}` 
+            : `${item.engine}-${item.umg}`;
+            
+        const existing = groupedBag.find(g => 
+            g.model === item.model && 
+            g.color === item.color && 
+            g.specsStr === itemSpecs
+        );
+
+        if (existing) {
+            existing.qty += 1;
+        } else {
+            groupedBag.push({ ...item, qty: 1, specsStr: itemSpecs });
+        }
+    });
+
+    const getColorClass = (model) => {
+        if (model.includes('Port')) return 'color-port';
+        if (model.includes('Play')) return 'color-play';
+        if (model.includes('Station')) return 'color-station';
+        if (model.includes('L')) return 'color-l';
+        if (model.includes('X')) return 'color-x';
+        return 'color-base';
+    };
+
+    groupedBag.forEach((item) => {
+        const priceNum = parseInt(item.price.replace(/[₹,]/g, ''));
+        const subtotal = priceNum * item.qty;
+        grandTotal += subtotal;
+        
+        const colorClass = getColorClass(item.model);
+        const displayName = (item.model === 'Base' || item.model == 'L' || item.model == 'X') ? (item.model === 'Base') ? `${item.year}` : `${item.year}${item.model}` :item.model.toUpperCase();
+
+        list.innerHTML += `
+            <div class="cart-item ${colorClass}">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="font-size:11px; font-weight:900; letter-spacing:1px; text-transform:uppercase;">
+                        ${item.type} <span style="color:#666">${displayName}</span>
+                    </div>
+                    ${item.qty > 1 ? `<div style="font-size:9px; background:#fff; color:#000; padding:2px 6px; border-radius:2px; font-weight:900;">${item.qty} UNITS</div>` : ''}
+                </div>
+                <div style="font-size:9px; color:#555; margin-top:4px; text-transform:uppercase;">${item.color}</div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:10px;">
+                    <div style="font-size:14px; font-weight:900; color:#fff">₹${subtotal.toLocaleString()}</div>
+                    <button class="remove-btn" onclick="removeItem('${item.model}', '${item.color}', '${item.specsStr}')">Remove</button>
+                </div>
+            </div>`;
+    });
+
+    // Update Totals
+    document.getElementById('cart-grand-total').innerText = `₹${grandTotal.toLocaleString()}`;
+    document.getElementById('cart-count').innerText = `BAG (${rawBag.length})`;
+
+    // Button States
+    const manifestBtn = document.getElementById('btn-manifest');
+    const checkoutBtn = document.getElementById('btn-checkout');
+    const isEmpty = rawBag.length === 0;
+    
+    [manifestBtn, checkoutBtn].forEach(btn => {
+        btn.disabled = isEmpty;
+        btn.style.opacity = isEmpty ? "0.2" : "1";
+        btn.style.pointerEvents = isEmpty ? "none" : "auto";
+    });
+}
+
+        window.onload = renderCart;
+    </script>
+</body>
+</html>

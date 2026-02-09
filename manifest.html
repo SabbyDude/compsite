@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iRhZi | Order Manifested</title>
+    <style>
+        :root {
+    --bg: #050505;
+    --text: #f5f5f7;
+    --card-bg: #0a0a0a;
+    --card-border: #1a1a1a;
+    --accent-station: #8b00ff;
+    --accent-play: #39ff14;
+    --accent-port: #ff8c00;
+    --accent-x: #dc143c;
+    --accent-base: #0071e3;
+    --accent-l: #ffcc00;
+    --alphone-grad: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; padding: 60px 20px;
+}
+
+.glow-bg {
+    position: fixed; inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(0, 242, 255, 0.04) 0%, transparent 70%);
+    z-index: 0; pointer-events: none;
+}
+
+h1.main-title { 
+    font-size: 14px; letter-spacing: 10px; font-weight: 900; 
+    color: #666; text-transform: uppercase; margin-bottom: 50px; 
+    z-index: 1;
+}
+
+/* FIX 1: 4 COLUMN GRID */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    width: 100%;
+    max-width: 1400px;
+    z-index: 1; margin-bottom: 50px;
+}
+
+@media (max-width: 1100px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .card-grid { grid-template-columns: repeat(1, 1fr); } }
+
+.device-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border); 
+    padding: 12px;
+    display: flex; 
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    min-height: 480px; /* Base height */
+    height: auto;      /* Allows it to grow so nothing cuts off */
+}
+
+.card-inner-border {
+    border: 1px solid #1a1a1a;
+    flex: 1; display: flex; flex-direction: column;
+}
+
+/* FIX 2: BIGGER TEXT & CONSISTENT COLORS */
+.card-header {
+    margin: 0; height: 80px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Update these in your <style> section */
+.card-header span {
+    font-size: 10px; 
+    text-transform: uppercase;
+    font-weight: 900; 
+    letter-spacing: 2px;
+    color: #ffffff; 
+    /* -webkit-text-stroke: 0.5px black; Thin outline for sub-label */
+    margin-bottom: 4px;
+    z-index: 2;
+}
+
+.card-header h2 {
+    margin: 0; 
+    font-size: 22px; 
+    font-weight: 900;
+    letter-spacing: 2px; 
+    text-transform: uppercase;
+    color: #dedede; 
+    /* -webkit-text-stroke: 1.2px #565656; Strong black outline */
+    /* text-shadow: 2px 2px 0px rgba(0,0,0,0.15); Adds depth */
+    z-index: 2;
+}
+
+.card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+
+.spec-row {
+    display: flex; justify-content: space-between;
+    padding: 12px 0; font-size: 13px; /* Increased font */
+    border-bottom: 1px solid #151515;
+}
+
+.label { color: #555; font-weight: 700; text-transform: uppercase; font-size: 10px; }
+.val { color: #fff; font-weight: 600; text-align: right; }
+
+.unit-price-row {
+    margin-top: auto; padding-top: 25px;
+    text-align: center;
+}
+
+.price-label { font-size: 11px; font-weight: 800; color: #444; text-transform: uppercase; letter-spacing: 2px; }
+.price-val { font-size: 24px; font-weight: 900; color: #fff; display: block; margin-top: 5px; }
+
+.manifest-footer { width: 100%; max-width: 600px; padding: 30px; text-align: center; z-index: 1; }
+.grand-total { font-size: 52px; font-weight: 900; color: #fff; margin: 15px 0; letter-spacing: -2px; }
+
+.btn-group { display: flex; gap: 20px; justify-content: center; margin-top: 40px; }
+
+.btn { 
+    padding: 22px 50px; border-radius: 50px; text-decoration: none; 
+    font-size: 12px; font-weight: 900; text-transform: uppercase; 
+    letter-spacing: 2px; transition: 0.4s; border: none; cursor: pointer;
+}
+
+.btn-hub { background: #fff; color: #121212; }
+.btn-download { background: var(--alphone-grad); color: white; }
+
+#loader { position: fixed; inset: 0; background: #000; z-index: 3000; transform: translateY(100%); transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1); }
+#loader.active { transform: translateY(0); }
+/* ADD THIS TO THE END OF YOUR STYLE TAG */
+@media print {
+    @page { size: A4; margin: 15mm; }
+    
+    body { background: #000 !important;}
+    .force-print-colors {
+         -webkit-print-color-adjust: exact; 
+         print-color-adjust: exact;
+    }
+
+    .btn-group, .glow-bg, #loader { display: none !important; }
+
+    .card-grid {
+        grid-template-columns: repeat(2, 1fr) !important; /* 2 cols is best for A4 */
+        gap: 20px !important;
+        display: grid !important;
+    }
+
+    .device-card {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        border: 1px solid #222 !important;
+        min-height: 400px !important;
+    }
+
+    .manifest-footer {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 40px !important;
+        padding-top: 20px !important;
+        border-top: 1px solid #333 !important;
+        page-break-before: auto;
+    }
+
+    .grand-total {
+        color: #fff !important;
+        font-size: 48px !important;
+    }
+}
+
+    </style>
+</head>
+<body>
+
+    <div id="loader"></div>
+    <div class="glow-bg"></div>
+
+    <h1 class="main-title">Ecosystem Allocation Manifest</h1>
+
+    <div class="card-grid" id="card-container"></div>
+
+    <div class="manifest-footer">
+        <div style="font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px;">Total Investment Value</div>
+        <div class="grand-total" id="m-price">₹0</div>
+        
+        <div class="btn-group">
+            <a href="#" class="btn btn-hub" onclick="exitToHub(event)">Back to Hub</a>
+            <button class="btn btn-download" onclick="window.print()">Download PDF</button>
+        </div>
+    </div>
+<script>
+    const colorMap = {
+        'Station': '#8b00ff', 'Play': '#355E3B', 'Port': '#ff8c00',
+        'X': '#dc143c', 'Base': '#0071e3', 'L': '#ffcc00'
+    };
+
+    function getAccent(model) {
+        for (let key in colorMap) {
+            if (model.includes(key)) return colorMap[key];
+        }
+        return '#333';
+    }
+
+    function createRow(label, val) {
+        return `<div class="spec-row"><span class="label">${label}</span><span class="val">${val}</span></div>`;
+    }
+
+    function exitToHub(e) {
+        e.preventDefault();
+        document.getElementById('loader').classList.add('active');
+        setTimeout(() => { window.location.href = 'index.html'; }, 600);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const bag = JSON.parse(localStorage.getItem('iRhZi_bag')) || [];
+        const container = document.getElementById('card-container');
+        let grandTotal = 0;
+
+        if (bag.length === 0) {
+            container.innerHTML = "<h2 style='grid-column: 1/-1; text-align:center; color:#333; letter-spacing:3px; margin-top:100px;'>NO ALLOCATIONS DETECTED</h2>";
+            return;
+        }
+
+        // Grouping Logic: Merge identical configurations into single cards
+        const groupedBag = [];
+        bag.forEach(item => {
+            const itemSpecs = item.type === 'deltop' 
+                ? `${item.zeta}-${item.ram}-${item.ssd}` 
+                : `${item.engine}-${item.umg}`;
+
+            const existing = groupedBag.find(g => 
+                g.model === item.model && 
+                g.color === item.color && 
+                (g.type === 'deltop' ? `${g.zeta}-${g.ram}-${g.ssd}` : `${g.engine}-${g.umg}`) === itemSpecs
+            );
+
+            if (existing) {
+                existing.quantity = (existing.quantity || 1) + 1;
+            } else {
+                groupedBag.push({...item, quantity: 1, specsStr: itemSpecs});
+            }
+        });
+
+        groupedBag.forEach(item => {
+            const unitPriceNum = parseInt(item.price.replace(/[₹,]/g, ''));
+            const subtotal = unitPriceNum * item.quantity;
+            grandTotal += subtotal;
+
+            const accent = getAccent(item.model);
+            const card = document.createElement('div');
+            card.className = 'device-card';
+            
+            const isDeltop = item.type === 'deltop';
+            const headerLabel = isDeltop ? 'DELTOP' : 'ALPHONE';
+            // const modelDisplay = (item.model === 'Base') ? 'BASE' : item.model.toUpperCase();
+            const modelDisplay = (item.model === 'Base' || item.model == 'L' || item.model == 'X') ? (item.model === 'Base') ? `${item.year}` : `${item.year}${item.model}` :item.model.toUpperCase();
+            
+            let specsHtml = '';
+            if(isDeltop && !Number.isInteger(Number(item.size))){
+                 specsHtml = `
+                    ${createRow('Chassis Form', item.size || '34"')}
+                    ${createRow('Finish', item.color)}
+                    ${createRow('Zeta Engine', item.zeta)}
+                    ${item.theta ? createRow('Theta Engine', item.theta) : ''}
+                    ${createRow('Memory', `${item.ram} / ${item.ssd}`)}
+                `;
+            }
+            else if (isDeltop) {
+                specsHtml = `
+                    
+                    ${createRow('Display Size', item.size || '34"')}
+                    ${createRow('Finish', item.color)}
+                    ${createRow('Zeta Engine', item.zeta)}
+                    ${item.theta ? createRow('Theta Engine', item.theta) : ''}
+                    ${createRow('Memory', `${item.ram} / ${item.ssd}`)}
+                `;
+            } else {
+                specsHtml = `
+                    ${createRow('Finish', item.color)}
+                    ${createRow('Core Engine', item.engine)}
+                    ${createRow('Logic Module', item.umg)}
+                `;
+            }
+
+            if(item.quantity > 1) {
+                specsHtml += createRow('Unit Investment', item.price);
+            }
+
+            card.innerHTML = `
+                <div class="card-inner-border">
+                    <div class="card-header" style="background-color: ${accent}">
+                        <span>${headerLabel}</span>
+                        <h2>${modelDisplay}</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="specs-container">${specsHtml}</div>
+                        <div class="unit-price-row">
+                            <span class="price-label">${item.quantity > 1 ? `Allocation (${item.quantity} Units)` : 'Final Investment'}</span>
+                            <span class="price-val">₹${subtotal.toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        document.getElementById('m-price').innerText = `₹${grandTotal.toLocaleString()}`;
+    });
+</script>
+    
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iRhZi | Technical Specifications</title>
+    <style>
+        :root {
+            --bg: #050505;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #0071e3;
+            --accent-port: #ff8c00;
+            --accent-l-series: #ffcc00;
+            --neon-play: #39ff14;
+            --neon-zeta: #8b00ff;
+            --accent-x-series: #dc143c;
+            --bullet: #DEDEDE;
+            --text-dim: #888;
+        }
+
+        * { box-sizing: border-box; cursor: default; }
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Search Bar Styling */
+        .search-container {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 20px;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: center;
+        }
+
+        #specSearch {
+            width: 100%;
+            max-width: 600px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 15px 25px;
+            border-radius: 50px;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        #specSearch:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 20px rgba(0, 113, 227, 0.2);
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        
+        .main-title {
+            font-size: 12px;
+            letter-spacing: 10px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .category-section { margin-bottom: 100px; }
+        
+        .category-title {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: -15px; 
+            background: linear-gradient(to bottom, #fff, #444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Dropdown Styling */
+        details summary {
+            list-style: none;
+            outline: none;
+        }
+        details summary::-webkit-details-marker { display: none; }
+        
+        .spec-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            margin-top: 20px;
+            margin-bottom: 0px;
+            transition: border-color 0.3s ease;
+            position: relative;
+            z-index: 1;
+            opacity: 1;
+        }
+
+        .spec-card:hover { border-color: rgba(255,255,255,0.2); }
+
+        .model-name {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 0; /* Changed for collapsed state */
+        }
+
+        details[open] .model-name {
+            margin-bottom: 20px;
+        }
+
+        .spec-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .spec-list li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+
+        .spec-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--accent-blue);
+        }
+
+        .port-card .spec-list li::before { color: var(--accent-port); }
+        .l-card .spec-list li::before { color: var(--accent-l-series); }
+        .play-card .spec-list li::before { color: var(--neon-play); }
+        .station-card .spec-list li::before { color: var(--neon-zeta); }
+        .x-card .spec-list li::before { color: var(--accent-x-series); }
+        
+        .zeta-card .spec-list li::before,
+        .theta-card .spec-list li::before { 
+            color: #DEDEDE; 
+        }
+
+        .zeta-link {
+            color: var(--neon-zeta);
+            text-decoration: none;
+            font-weight: 600;
+            border-bottom: 1px solid transparent;
+            transition: 0.3s;
+        }
+
+        .zeta-link:hover { border-color: var(--neon-zeta); }
+
+        .back-home {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            color: #555;
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            z-index: 1100;
+        }
+        
+        .back-home:hover { color: #fff; }
+        .highlight { color: #fff; font-weight: 600; }
+
+        .chart-container {
+            margin-top: 35px;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 18px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .bench-group { 
+            margin-bottom: 30px; 
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+        }
+
+        .bench-label { 
+            font-size: 15px; 
+            font-weight: 700; 
+            margin-bottom: 18px; 
+            color: #fff;
+            border-left: 3px solid var(--accent-blue);
+            padding-left: 12px;
+        }
+
+        .port-card .bench-label { border-color: var(--accent-port); }
+        .play-card .bench-label { border-color: var(--neon-play); }
+        .station-card .bench-label { border-color: var(--neon-zeta); }
+
+        .bar-row { margin-bottom: 16px; }
+        .bar-meta { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; color: var(--text-dim); }
+        .m-score { font-weight: 700; color: #fff; font-family: monospace; font-size: 13px; }
+        .bar-track { height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: width 1.5s cubic-bezier(0.1, 0, 0, 1); }
+
+        /* Custom Cursor Logic */
+        * { cursor: none !important; }
+        #custom-cursor {
+            width: 20px; height: 20px;
+            border: 2px solid var(--bullet);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease-out, background-color 0.2s, border-color 0.2s;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+        }
+        .cursor-hover {
+            transform: translate(-50%, -50%) scale(2.5) !important;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: #fff !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="custom-cursor"></div>
+    <a href="index.html" class="back-home">← Back to Hub</a>
+
+    <div class="search-container">
+        <input type="text" id="specSearch" placeholder="Search architecture, gaming, upsilon, or ports...">
+    </div>
+
+    <div class="container">
+        <h1 class="main-title">Technical Manifest v2.0</h1>
+
+        <section class="category-section" id="deltop">
+            <h2 class="category-title">Deltop</h2>
+            <div class="spec-card port-card" data-search="port zeta upsilon multitasking battery">
+                <details>
+                    <summary><div class="model-name" style="color: var(--accent-port);">Port</div></summary>
+                    <div style="margin-top: 20px;">
+                        <ul class="spec-list">
+                            <li>Features a thin-and-sleek design and weighs proficiently less making it the <span class="highlight">ultimate portable machine</span>.</li>
+                            <li>Powered by our ‘Zeta U/U+’ CPUs (<a href="#zeta" class="zeta-link">check Zeta for more</a>), providing excellent speed for multitasking, browsing, and creative work.</li>
+                            <li>Equipped with our high-end <span class="highlight">Upsilon+ Display</span> calibrated for larger screens supporting over 1500 nits and a billion colours.</li>
+                            <li>Provides a full-day battery life with a single charge and fast charging allows complete charge under an hour.</li>
+                            <li>Features a high-fidelity multi-speaker sound system with force-cancelling woofers and a 25MP camera.</li>
+                        </ul>
+                        <div id="chart-port-vs-macs" class="chart-container"></div>
+                    </div>
+                </details>
+            </div>
+
+            <div class="spec-card play-card" data-search="play zeta theta upsilon gaming refresh rate cooling liquid metal">
+                <details>
+                    <summary><div class="model-name" style="color: var(--neon-play);">Play</div></summary>
+                    <div style="margin-top: 20px;">
+                        <ul class="spec-list">
+                            <li>Features a minimalistic and performance-first design, making it the <span class="highlight">ultimate gaming-on-the-go machine</span>.</li>
+                            <li>Powered by our ‘Zeta H/H+’ CPUs (<a href="#zeta" class="zeta-link">check Zeta for more</a>) and ‘Theta U/U+’ GPUs (<a href="#theta" class="zeta-link">check Theta for more</a>) for intensive creative work.</li>
+                            <li>Equipped with our high-end <span class="highlight">Upsilon Display</span> along with higher refresh rate calibrated for gaming.</li>
+                            <li>Provided a tactile-feel key clicks as well as smooth-rolling trackpads with over eight points of precision.</li>
+                            <li>Includes effective <span class="highlight">liquid-metal cooling</span> with an open-chamber thermal management preventing throttling.</li>
+                        </ul>
+                        <div id="chart-play-vs-gaming" class="chart-container"></div>
+                    </div>
+                </details>
+            </div>
+
+            <div class="spec-card station-card" data-search="station zeta theta thunderbolt ethernet hdmi upgradable">
+                <details>
+                    <summary><div class="model-name" style="color: var(--neon-zeta);">Station</div></summary>
+                    <div style="margin-top: 20px;">
+                        <ul class="spec-list">
+                            <li>Features an aesthetic-harmony design that is meant to blend within any existing environment.</li>
+                            <li>Powered by our ‘Zeta X/X+’ CPUs (<a href="#zeta" class="zeta-link">check Zeta for more</a>) and ‘Theta X/X+’ GPUs (<a href="#theta" class="zeta-link">check Theta for more</a>) providing the <span class="highlight">highest-performance</span>.</li>
+                            <li>Uses our lab-calibrated advanced fan design to remain as whisper-quiet imaginable even under heavy performance tasks.</li>
+                            <li>Includes an array of high-speed I/O ports like <span class="highlight">multiple Thunderbolt 4</span>, USB 3.0, 20Gb Ethernet and high-bandwidth HDMI ports.</li>
+                            <li>Allows easy semi-upgradable supports for UMGs as well as open-design allowing user to interact with the inner hardware.</li>
+                        </ul>
+                        <div id="chart-station-vs-workstation" class="chart-container"></div>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <section class="category-section" id="alphone">
+            <h2 class="category-title">Alphone</h2>
+
+            <div class="spec-card l-card" data-search="L series zeta upsilon camera selfie battery">
+                <details>
+                    <summary><div class="model-name" style="color: var(--accent-l-series);">L Series</div></summary>
+                    <div style="margin-top: 20px;">
+                        <ul class="spec-list">
+                            <li>Powered by our ‘Zeta M’ series CPUs (<a href="#zeta" class="zeta-link">check Zeta for more</a>) allowing for providing excellent speed.</li>
+                            <li>Features a <span class="highlight">small form-factor design</span> along with a 15cm 1080x2400 90Hz Upsilon display.</li>
+                            <li>A 12-MP front-facing camera with dynamic lighting for intensive selfies.</li>
+                            <li>A 24-MP rear-facing camera with motion depth capturing near-DSLR quality images.</li>
+                            <li>Enables two-way audio using our speaker-microphone system.</li>
+                            <li>Provides 35 hours of Optimum battery and fully charges around an hour.</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+
+            <div class="spec-card" data-search="base series zeta upsilon camera ultra-wide battery">
+                <details>
+                    <summary><div class="model-name" style="color: var(--accent-blue);">Base Series</div></summary>
+                    <div style="margin-top: 20px;">
+                        <ul class="spec-list">
+                            <li>Powered by high-end version of ‘Zeta M’ series CPUs (<a href="#zeta" class="zeta-link">check Zeta for more</a>).</li>
+                            <li>Features the best form-factor design along with a 16cm 1280x3000 120Hz Upsilon display.</li>
+                            <li>A 20-MP front-facing camera with higher dynamic lighting and space reflections.</li>
+                            <li>A 48-MP rear-facing camera and a <span class="highlight">24-MP ultra-wide camera</span> with 8-bit colour depth.</li>
+                            <li>Enables three-way audio for crispy clear communication.</li>
+                            <li>Provides 45 hours of Optimum+ battery and fully charges under an hour.</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+
+            <div class="spec-card x-card" data-search="x series zeta upsilon camera telephoto dslr battery">
+                <details>
+                    <summary><div class="model-name" style="color: var(--accent-x-series);">X Series</div></summary>
+                    <div style="margin-top: 20px;">
+                        <ul class="spec-list">
+                            <li>Powered by our ‘Zeta M+’ series CPUs (<a href="#zeta" class="zeta-link">check Zeta for more</a>) for professional creative work.</li>
+                            <li>Equipped with a 17cm 2080x4800 <span class="highlight">240Hz Upsilon+ display</span>.</li>
+                            <li>A 24-MP front-facing camera and a <span class="highlight">100-MP rear-facing camera</span> with 16-bit colour contrasting.</li>
+                            <li>Features a 50-MP ultra-wide and a <span class="highlight">50-MP telephoto camera</span> for wildlife and sports.</li>
+                            <li>Enables five-way audio using our advanced speaker-microphone system.</li>
+                            <li>Provides 60 hours of Optimum+ battery life.</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <section class="category-section" id="zeta">
+            <!-- <h2 class="category-title" style="color: var(--neon-zeta);">Zeta Engine</h2> -->
+            <div class="spec-card zeta-card">
+                <details>
+                    <summary><div class="model-name" style="color: var(--bullet);">Zeta Architecture</div></summary>
+                    <div style="margin-top: 20px;">
+                        <p>Zeta is our processor chip lineup. We calibrate these units specifically targeting each device:</p>
+                        <ul class="spec-list">
+                            <li><span class="highlight">Port:</span> U/U+ series high-end computing with integrated graphics and neural engine.</li>
+                            <li><span class="highlight">Play:</span> H/H+ series focusing solely on gaming or heavier-workload.</li>
+                            <li><span class="highlight">Station:</span> X/X+ series monster performers.</li>
+                            <li><span class="highlight">Alphone:</span> M/M+ series configured for mobile systems.</li>
+                        </ul>
+                        <p style="margin-top:20px; border-top: 1px solid #222; padding-top:20px;">
+                            Instead of relying on ARM or x86 architecture, we developed <span class="highlight" style="color: var(--accent-blue);">ARM86</span>. It acts as a conjugating bridge between both, and is available in <span class="highlight">all of our devices</span>.
+                        </p>
+                    </div>
+                </details>
+            </div>
+        </section>
+        
+        <section class="category-section" id="theta">
+            <!-- <h2 class="category-title" style="color: var(--bullet);">Theta Engine</h2> -->
+            <div class="spec-card theta-card">
+                <details>
+                    <summary><div class="model-name" style="color: var(--bullet);">Theta Graphics</div></summary>
+                    <div style="margin-top: 20px;">
+                        <p>Theta is our graphical chip lineup specifically for heavy lifting:</p>
+                        <ul class="spec-list">
+                            <li><span class="highlight">Play:</span> U/U+ series working with Zeta for gaming dominance.</li>
+                            <li><span class="highlight">Station:</span> X/X+ series monster performers for rendering.</li>
+                        </ul>
+                        <p>We are planning on entering the dedicated market with our theta chipsets partnering with third-party solutions soon.</p>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <section class="category-section" id="umg">
+            <!-- <h2 class="category-title">Unified Memory Gigs</h2> -->
+            <div class="spec-card">
+                <details>
+                    <summary><div class="model-name" style="color: #fff;">UMG Technology</div></summary>
+                    <div style="margin-top: 20px;">
+                        <p>Our ARM86 architecture allows for <span class="highlight">Unified Memory Gigs (UMG)</span>. We created a bridge allowing RAM, VRAM, and Storage to work seamlessly.</p>
+                        <p>If Theta requires more VRAM, it borrows from Storage. If the system is low on RAM, it borrows from VRAM. The possibilities are endless.</p>
+                        <p style="font-size: 14px; color: #666;">*Note: UMG is currently not open-source while we discuss the ethics of power abuse by other corporations.</p>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+       <section class="category-section" id="lambda-os">
+            <div class="spec-card theta-card" data-search="lambda os arch linux de desktop environment kappa package manager eta wine proton gaming ai privacy">
+                <details>
+                    <summary><div class="model-name" style="color: var(--bullet);">Lambda OS</div></summary>
+                    <div style="margin-top: 20px;">
+                        <p>Our proprietary ecosystem is built upon the robust <a href="https://archlinux.org/" target="_blank" class="highlight" style="text-decoration: underline; text-decoration-color: var(--text-dim); text-underline-offset: 4px;">Arch Linux</a> foundation, engineered specifically for the iRhZi hardware stack. It is designed to bridge the gap between extreme user customizability and seamless out-of-the-box performance.</p>
+                        <ul class="spec-list">
+                            <li><span class="highlight">Lambda DE:</span> A bespoke Desktop Environment bridging the customizability of KDE Plasma with the focused, minimalist ergonomics of GNOME.</li>
+                            <li><span class="highlight">Kappa PM:</span> Our ultra-fast, native package manager designed for software deployment, ensuring atomic updates and native support for the iRhZi ecosystem</li>
+                          <li><span class="highlight">The "Eta" Layer:</span> A specialized, low-latency compatibility bridge (derived from Wine and Proton) that allows industry-standard gaming, creative, and office suites to run natively without performance degradation.</li>
+                            <li><span class="highlight">Hardware Synergy:</span> Specifically optimized for <span class="highlight">Zeta CPUs</span> and <span class="highlight">Theta GPUs</span>, Lambda OS utilizes our ARM86 instruction set to achieve near-zero overhead in system tasks.</li>
+                            <li><span class="highlight">Ecosystem Integration:</span> Deployed as <span class="highlight">Lambda-D</span> for Deltop and <span class="highlight">Lambda-A</span> for Alphone, providing a unified continuity experience across all hardware form factors.</li>
+                       </ul>
+                        <p style="margin-top:20px; border-top: 1px solid #222; padding-top:20px; font-weight: 600; color: var(--bullet);">
+                            The Zero-AI Initiative:
+                        </p>
+                        <p style="font-size: 14px; color: #ccc;">
+                            In accordance with our user-first philosophy, Lambda OS contains <span class="highlight">zero implementations</span> of LLMs or Generative AI at the kernel or shell level. Your data remains local, private, and human-driven.
+                        </p>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('specSearch');
+        const cards = document.querySelectorAll('.spec-card');
+
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            cards.forEach(card => {
+                const searchContent = card.getAttribute('data-search') || "";
+                const textContent = card.innerText.toLowerCase();
+                const details = card.querySelector('details');
+                
+                if (textContent.includes(term) || searchContent.includes(term)) {
+                    card.style.display = "block";
+                    // Automatically open card if searching
+                    if(term.length > 0 && details) details.open = true;
+                } else {
+                    card.style.display = "none";
+                    if(details) details.open = false;
+                }
+            });
+        });
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if(target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                    // If target is inside a details, open it
+                    const details = target.querySelector('details');
+                    if(details) details.open = true;
+                }
+            });
+        });
+
+        const cursor = document.getElementById('custom-cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // Updated interactives to include summary for the cursor effect
+        const interactives = document.querySelectorAll('a, input, .spec-card, button, summary');
+        interactives.forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('cursor-hover'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('cursor-hover'));
+        });
+    </script>
+    <script src="compare.js"></script>
+</body>
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iRhZi | Identify Your Power</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root { 
+            --bg: #121212; 
+            --text: #f5f5f7;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --neon-port: #ff8c00; 
+            --neon-play: #39ff14; 
+            --neon-station: #8b00ff; 
+            --current-neon: var(--neon-port);
+        }
+        
+        * { cursor: none !important; box-sizing: border-box; }
+
+        body { margin: 0; font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; transition: 0.5s ease; }
+        
+        #custom-cursor {
+            position: fixed; top: 0; left: 0; width: 30px; height: 30px;
+            border: 1px solid var(--current-neon); pointer-events: none; z-index: 9999;
+            transform: translate(-50%, -50%); transition: width 0.3s, height 0.3s, border-color 0.4s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        #custom-cursor::after { content: '+'; color: var(--current-neon); font-size: 18px; font-weight: 100; }
+
+        .preview-pane { 
+            flex: 1; display: flex; flex-direction: column; justify-content: center; 
+            align-items: center; text-align: center; 
+            background: radial-gradient(circle at center, #111 0%, #000 100%); position: relative;
+        }
+        
+        .config-pane { 
+            width: 550px; padding: 40px; overflow-y: auto; 
+            background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(30px);
+            border-left: 1px solid #222; position: relative; z-index: 10; 
+        }
+        
+        .section-header { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; letter-spacing: 2px; margin: 30px 0 12px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+        
+        .btn { 
+            background: var(--glass); border: 1px solid var(--glass-border); color: #888; 
+            padding: 16px 10px; border-radius: 12px; font-size: 11px; 
+            transition: 0.4s cubic-bezier(0.23, 1, 0.32, 1); text-align: center; 
+            position: relative; overflow: hidden;
+        }
+        
+        .btn::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at var(--x) var(--y), var(--current-neon) 0%, transparent 70%);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .btn:hover:not(.disabled) { border-color: var(--current-neon); color: #fff; transform: translateY(-2px); }
+        
+        .btn.active { 
+            background: rgba(255, 255, 255, 0.02); 
+            border-color: var(--current-neon); 
+            color: var(--current-neon); 
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 0 10px var(--current-neon);
+        }
+
+        .btn.disabled { opacity: 0.05; cursor: not-allowed; filter: grayscale(1); pointer-events: none; }
+        
+        .chip-tag { 
+            font-family: 'Courier New', Courier, monospace; font-size: 100px; 
+            font-weight: 900; line-height: 0.95; display: flex;
+            flex-direction: column; align-items: center; gap: 5px;
+        }
+        
+        #v-zeta, #v-theta {
+            background: linear-gradient(180deg, #fff 0%, var(--current-neon) 100%);
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.1));
+            transition: 0.5s ease;
+        }
+        
+        .hardware-text { color: #fff; margin-top: 50px; font-size: 38px; font-weight: 200; opacity: 0.7; letter-spacing: 2px; }
+        #v-model { letter-spacing: 12px; font-size: 14px; color: var(--current-neon); margin-bottom: 5px; text-transform: uppercase; font-weight: 900; }
+        #v-material { font-size: 10px; letter-spacing: 4px; color: #555; text-transform: uppercase; margin-bottom: 20px; }
+
+        .footer { 
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            height: 120px; background: linear-gradient(transparent, rgba(0,0,0,0.9)); 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 60px; z-index: 100; 
+        }
+
+        .manifest-btn {
+            background: var(--current-neon); color: #000; border: none; padding: 18px 45px;
+            border-radius: 50px; font-weight: 900; letter-spacing: 2px; font-size: 14px;
+        }
+
+        #toast-container { position: fixed; top: 40px; right: 40px; z-index: 10000; pointer-events: none; }
+        .toast { 
+            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(15px); border: 1px solid var(--current-neon); 
+            padding: 20px 30px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; 
+            min-width: 280px; transform: translateX(150%); transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); 
+            position: relative; overflow: hidden; pointer-events: auto;
+        }
+        .toast.active { transform: translateX(0); }
+        .toast-progress { position: absolute; bottom: 0; left: 0; height: 3px; width: 100%; background: var(--current-neon); transform: scaleX(0); transform-origin: left; }
+        .toast.active .toast-progress { animation: progress 3s linear forwards; }
+        @keyframes progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--current-neon); z-index: 1000; transform: translateY(-100%); transition: 0.6s cubic-bezier(0.85, 0, 0.15, 1); }
+        #loader.active { transform: translateY(0); }
+        .back-btn { position: absolute; top: 40px; left: 40px; text-decoration: none; color: #444; font-weight: 800; font-size: 10px; z-index: 100; text-transform: uppercase; }
+        .back-btn:hover { color: var(--current-neon); transform: translateX(-5px); }
+
+        /* Updated Swatch UI: Split Rectangle Design */
+        .swatch { 
+            display: flex; 
+            align-items: stretch; 
+            justify-content: stretch; 
+            padding: 0 !important; 
+            overflow: hidden;
+            height: 45px;
+        }
+        
+        .swatch-color { 
+            flex: 1; 
+            height: 100%; 
+            border-right: 1px solid var(--glass-border);
+        }
+        
+        .swatch-name { 
+            flex: 1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 9px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .btn.swatch.active .swatch-color {
+            border-right-color: var(--current-neon);
+        }
+    </style>
+</head>
+<body>
+<div id="custom-cursor"></div>
+<div id="loader"></div>
+
+<div id="toast-container">
+    <div id="toast" class="toast">
+        <div class="toast-title">Ecosystem Update</div>
+        <div class="toast-msg">Deltop added to Bag</div>
+        <div class="toast-progress"></div>
+    </div>
+</div>
+
+<a href="#" class="back-btn" onclick="goBack(event)">← Back to Hub</a>
+
+<div class="preview-pane">
+    <div class="floating-manifest">
+        <div id="v-model">DELTOP PLAY</div>
+        <div id="v-material">Space Gray</div>
+        <div class="chip-tag">
+            <span id="v-zeta">--</span>
+            <span id="v-theta"></span>
+        </div>
+        <div id="v-hw-combined" class="hardware-text">(-- + --)</div>
+    </div>
+    
+    <div class="footer">
+        <div id="v-price" style="font-size: 32px; font-weight: bold; font-family: monospace;">₹0</div>
+        <button class="manifest-btn" onclick="triggerManifest()">MANIFEST</button>
+    </div>
+</div>
+
+<div class="config-pane">
+    <div class="section-header">Model</div>
+    <div class="grid">
+        <button class="btn" onclick="updateState('model', 'Port', this)">Port</button>
+        <button class="btn active" onclick="updateState('model', 'Play', this)">Play</button>
+        <button class="btn" onclick="updateState('model', 'Station', this)">Station</button>
+    </div>
+
+     <div class="section-header">Architecture Year</div>
+    <div class="grid">
+        <button class="btn active" onclick="updateState('year', '25', this)">2025</button>
+        <button class="btn" onclick="updateState('year', '30', this)">2030</button>
+    </div>
+
+    <div id="size-section">
+        <div class="section-header" id="size-header">Size</div>
+        <div id="size-grid" class="grid"></div>
+    </div>
+
+    <div class="section-header">Exterior Finish</div>
+    <div id="color-grid" class="grid"></div>
+
+    <div class="section-header">Zeta Engine</div>
+    <div id="zeta-grid" class="grid"></div>
+    <div id="theta-container">
+        <div class="section-header">Theta Engine</div>
+        <div id="theta-grid" class="grid"></div>
+    </div>
+    <div class="section-header">Memory</div>
+    <div id="ram-grid" class="grid"></div>
+    <div class="section-header">Storage</div>
+    <div id="ssd-grid" class="grid"></div>
+    <div style="height:120px;"></div>
+</div>
+
+<script src="computer.js"></script> 
+<script> 
+    // Initial state matching the first button (2021)
+    let state = { model:'Play', size: null, year:'25', zeta:null, theta:null, ram:null, ssd:null, color: null }; 
+    const cursor = document.getElementById('custom-cursor'); 
+
+    // Custom Cursor Logic
+    document.addEventListener('mousemove', (e) => { 
+        cursor.style.left = e.clientX + 'px'; 
+        cursor.style.top = e.clientY + 'px'; 
+        const target = e.target.closest('.btn'); 
+        if (target) { 
+            const rect = target.getBoundingClientRect(); 
+            target.style.setProperty('--x', `${e.clientX - rect.left}px`); 
+            target.style.setProperty('--y', `${e.clientY - rect.top}px`); 
+            cursor.style.width = '30px'; cursor.style.height = '30px';
+        } else {
+            cursor.style.width = '20px'; cursor.style.height = '20px';
+        }
+    }); 
+
+    function triggerManifest() { 
+        const currentConfig = {  
+            id: Date.now(), type: 'deltop', model: state.model, size: state.size, year: state.year, 
+            color: state.color, zeta: state.zeta, theta: state.theta, ram: state.ram, ssd: state.ssd, 
+            price: document.getElementById('v-price').innerText, quantity: 1 
+        }; 
+        let bag = JSON.parse(localStorage.getItem('iRhZi_bag')) || []; 
+        bag.push(currentConfig); 
+        localStorage.setItem('iRhZi_bag', JSON.stringify(bag)); 
+        
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.9 }, colors: [getComputedStyle(document.documentElement).getPropertyValue('--current-neon'), '#ffffff'] }); 
+        const toast = document.getElementById('toast'); 
+        toast.classList.add('active'); 
+        setTimeout(() => { toast.classList.remove('active'); }, 3000); 
+    } 
+
+    function calculatePrice() {
+        if (!state.zeta || !state.size) return 0;
+        const yearData = iRhZi_DATA.pricing[state.year];
+        let total = 0;
+
+        total += yearData.chassis[state.model][state.size] || 0;
+
+        const zMatch = state.zeta.match(/Z\d+([UHX]\+?) (\d+)C/);
+        if (zMatch) {
+            const zTier = zMatch[1], zCores = zMatch[2];
+            total += yearData.zeta[zTier][zCores] || 0;
+        }
+        if (state.model !== 'Port' && state.theta) {
+            const tMatch = state.theta.match(/T\d+([UX]\+?) (\d+)C/);
+            if (tMatch) {
+                const tTier = tMatch[1], tCores = tMatch[2];
+                total += yearData.theta[tTier][tCores] || 0;
+            }
+        }
+        total += (state.ram * yearData.perGB_RAM);
+        total += (state.ssd * yearData.perGB_SSD);
+        return total;
+    }
+
+   function updateState(key, val, el) { 
+        state[key] = val; 
+        if(el) updateActive(el); 
+
+        if (key === 'model') { 
+            const color = val === 'Port' ? 'var(--neon-port)' : (val === 'Play' ? 'var(--neon-play)' : 'var(--neon-station)'); 
+            document.documentElement.style.setProperty('--current-neon', color); 
+            state.zeta = null;
+            state.theta = null;
+        } 
+
+        if (key === 'year') {
+            state.zeta = null;
+            state.theta = null;
+            state.size = null;
+            state.ram = null;
+            state.ssd = null;
+        }
+
+        if (key === 'model' || key === 'year') {  
+            renderSizes(); 
+            renderColors(); 
+            renderZeta(); 
+            renderTheta();  
+        } 
+        
+        if (key === 'size') {
+            updateUI();
+        }
+
+        validateAndRender(); 
+    }
+
+    function renderSizes() {
+        const header = document.getElementById('size-header');
+        const grid = document.getElementById('size-grid');
+        grid.innerHTML = '';
+        const isStation = state.model === 'Station';
+        header.innerText = isStation ? 'Chassis Form' : 'Display Architecture (cm)';
+        const sizes = iRhZi_DATA.sizeOptions[state.year][state.model];
+        
+        sizes.forEach(s => {
+            const b = document.createElement('button');
+            b.className = `btn ${state.size === s ? 'active' : ''}`;
+            b.innerText = s;
+            b.onclick = (e) => { 
+                state.size = s; 
+                updateActive(b); 
+                updateUI(); 
+            };
+            grid.appendChild(b);
+        });
+
+        if (!state.size || !sizes.includes(state.size)) {
+            grid.firstChild.click();
+        }
+    }
+
+    function renderColors() {
+        const grid = document.getElementById('color-grid');
+        grid.innerHTML = '';
+        const options = iRhZi_DATA.colorOptions[state.year];
+        
+        options.forEach(opt => {
+            const b = document.createElement('button');
+            b.className = `btn swatch ${state.color === opt.name ? 'active' : ''}`;
+            b.innerHTML = `
+                <div class="swatch-color" style="background:${opt.hex}"></div>
+                <div class="swatch-name">${opt.name}</div>
+            `;
+            b.onclick = (e) => { 
+                state.color = opt.name; 
+                updateActive(b); 
+                updateUI(); 
+            };
+            grid.appendChild(b);
+        });
+
+        if (!state.color || !options.find(o => o.name === state.color)) {
+            grid.firstChild.click();
+        }
+    }
+
+    function renderZeta() { 
+        const grid = document.getElementById('zeta-grid'); 
+        grid.innerHTML = ''; 
+        let tier = state.model === 'Port' ? 'U' : (state.model === 'Play' ? 'H' : 'X'); 
+        
+        [tier, tier+'+'].forEach(t => { 
+            if(!iRhZi_DATA.coreData[state.year][t]) return; 
+            iRhZi_DATA.coreData[state.year][t].forEach(c => { 
+                const b = document.createElement('button'); 
+                const id = `Z${state.year}${t} ${c}C`; 
+                b.className = `btn ${state.zeta === id ? 'active' : ''}`; 
+                b.innerText = id; 
+                b.onclick = (e) => { state.zeta = id; updateActive(b); validateAndRender(); }; 
+                grid.appendChild(b); 
+            }); 
+        }); 
+
+        const options = Array.from(grid.querySelectorAll('.btn'));
+        const currentValid = options.find(b => b.innerText === state.zeta);
+        if(!currentValid && options.length > 0) {
+            options[0].click(); 
+        }
+    } 
+
+    function renderTheta() { 
+        const grid = document.getElementById('theta-grid'); 
+        grid.innerHTML = ''; 
+        if(state.model === 'Port') {  
+            document.getElementById('theta-container').style.display = 'none';  
+            state.theta = null; 
+            return;  
+        } 
+        document.getElementById('theta-container').style.display = 'block'; 
+        
+        const sets = iRhZi_DATA.thetaRange[state.year][state.model];  
+        Object.keys(sets).forEach(tKey => { 
+            sets[tKey].forEach(c => { 
+                const b = document.createElement('button'); 
+                const id = `T${state.year}${tKey} ${c}C`; 
+                b.className = `btn ${state.theta === id ? 'active' : ''}`; 
+                b.innerText = id; 
+                b.onclick = (e) => { state.theta = id; updateActive(b); validateAndRender(); }; 
+                grid.appendChild(b); 
+            }); 
+        }); 
+
+        const options = Array.from(grid.querySelectorAll('.btn'));
+        if(!state.theta && options.length > 0) {
+            options[0].click();
+        }
+    }
+
+    function validateAndRender() {
+        if(!state.zeta) return;
+        const zM = state.zeta.match(/Z\d+([UHX]\+?) (\d+)C/);
+        const zTier = zM[1], zC = parseInt(zM[2]);
+
+        if (state.model !== 'Port') {
+            document.querySelectorAll('#theta-grid .btn').forEach(b => {
+                const bc = parseInt(b.innerText.match(/(\d+)C/)[1]);
+                const bt = b.innerText.includes('+') ? b.innerText.split(' ')[0].slice(-2) : b.innerText.split(' ')[0].slice(-1);
+                let dis = false;
+                if (state.model === 'Play') {
+                    if (zTier === 'H') { if (bt === 'U+' || bc > zC * 2) dis = true; } 
+                    else { if ((bt === 'U' && bc > zC * 2) || (bt === 'U+' && bc > zC)) dis = true; }
+                } else {
+                    if (zTier === 'X+') {
+                        if (bt === 'X' && (bc < zC * 2 || bc > zC * 4)) dis = true;
+                        if (bt === 'X+' && (bc < zC || bc > zC * 2)) dis = true;
+                    } else {
+                        if (zTier === 'X') { if ((bt === 'X' && bc > zC) || (bt === 'X+' && bc > zC / 2)) dis = true; } 
+                        else { if ((bt === 'X' && bc > zC * 4) || (bt === 'X+' && bc > zC * 2)) dis = true; }
+                    }
+                }
+                b.classList.toggle('disabled', dis);
+            });
+            const currentThetaBtn = Array.from(document.querySelectorAll('#theta-grid .btn')).find(b => b.innerText === state.theta);
+            if (currentThetaBtn && currentThetaBtn.classList.contains('disabled')) {
+                const firstValid = Array.from(document.querySelectorAll('#theta-grid .btn')).find(b => !b.classList.contains('disabled'));
+                if (firstValid) firstValid.click();
+            }
+        }
+
+        let rMin = 0, rMax = 500, sMin = 0, sMax = 10000;
+        if (state.model === 'Port') {
+            if (zTier === 'U') { rMax = 50; sMax = 500; } else { rMin = 15; rMax = 150; sMax = 1000; }
+        } else if (state.model === 'Play') {
+            const tT = state.theta ? (state.theta.includes('+') ? 'U+' : 'U') : 'U';
+            if (zTier === 'H') { rMin = 10; rMax = 100; sMin = 500; sMax = 1500; }
+            else { rMin = (tT === 'U' ? 50 : 75); rMax = 150; sMin = (tT === 'U' ? 500 : 1000); sMax = (tT === 'U' ? 2000 : 3000); }
+        } else {
+            const tT = state.theta ? (state.theta.includes('+') ? 'X+' : 'X') : 'X';
+            if (zTier === 'X') { rMin = (tT === 'X' ? 100 : 150); rMax = 300; sMin = (tT === 'X' ? 1000 : 3000); sMax = (tT === 'X' ? 4000 : 6000); }
+            else { rMin = 200; rMax = (tT === 'X' ? 400 : 500); sMin = (tT === 'X' ? 4000 : 5000); sMax = (tT === 'X' ? 8000 : 10000); }
+        }
+        renderHWGrid('ram', iRhZi_DATA.ramOptions, rMin, rMax);
+        renderHWGrid('ssd', iRhZi_DATA.ssdOptions, sMin, sMax);
+        updateUI();
+    }
+
+    function renderHWGrid(key, opts, min, max) { 
+        const grid = document.getElementById(`${key}-grid`); grid.innerHTML = ''; 
+        opts.forEach(o => { 
+            const b = document.createElement('button'); 
+            b.className = `btn ${state[key] == o ? 'active' : ''}`; 
+            if(o < min || o > max) b.classList.add('disabled'); 
+            b.innerText = o; 
+            b.onclick = (e) => { state[key] = o; updateActive(e.target); updateUI(); }; 
+            grid.appendChild(b); 
+        }); 
+        if(!state[key] || state[key] < min || state[key] > max) { 
+            const v = Array.from(grid.children).find(b => !b.classList.contains('disabled')); 
+            if(v) v.click(); 
+        } 
+    } 
+
+    function updateActive(el) {  
+        Array.from(el.parentNode.children).forEach(b => b.classList.remove('active'));  
+        el.classList.add('active');  
+    } 
+
+    function updateUI() { 
+        document.getElementById('v-model').innerText = `Deltop ${state.model.toUpperCase()} (${state.size || '--'})`; 
+        document.getElementById('v-material').innerText = state.color || '--';
+        document.getElementById('v-zeta').innerText = state.zeta || '--'; 
+        document.getElementById('v-theta').innerText = state.theta || ''; 
+        document.getElementById('v-hw-combined').innerText = `${state.ram}/${state.ssd} Unified Memory Gigs`; 
+        document.getElementById('v-price').innerText = `₹${calculatePrice().toLocaleString()}`; 
+    } 
+
+    function goBack(e) { e.preventDefault(); document.getElementById('loader').classList.add('active'); setTimeout(() => { window.location.href = 'index.html'; }, 600); } 
+    
+    // STARTUP
+    updateState('model', 'Play', document.querySelector('[onclick*="Play"]')); 
+</script>
+</body>
+</html>
