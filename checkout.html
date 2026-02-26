@@ -304,13 +304,18 @@
                   (currentMethod === 'upi' && document.getElementById('upi-id').value.includes('@'));
         document.getElementById('main-submit-btn').disabled = !(core && pay);
     }
-    const modelColors = {
-    'Port': '#d45d00', 'Play': '#00ff00', 'Station': '#8a2be2',
-    'L': '#ffff00', 'Base': '#0000ff', 'X': '#ff0000'
+    const colorMap = {
+    'STATION': '#8b00ff', 'PLAY': '#355E3B', 'PORT': '#ff8c00', 'X': '#dc143c', 'BASE': '#0071e3', 'L': '#9E8037',
+    'MONITOR': '#569194', 'KEYBOARD': '#ff00ff', 'MOUSE': '#877756', 'EARSET': '#ababab', 'MIC': '#cd7f32'
 };
 
-function getModelColor(model) {
-    for (let key in modelColors) { if (model.includes(key)) return modelColors[key]; }
+function getDisplayColor(item) {
+    if (item.type === 'epsilon' && item.category) {
+        return colorMap[item.category.toUpperCase()] || '#333';
+    }
+    for (let key in colorMap) {
+        if (item.model.toUpperCase().includes(key)) return colorMap[key];
+    }
     return '#333';
 }
 
@@ -338,19 +343,23 @@ function getModelColor(model) {
         });
 
         bagData.forEach(item => {
-            const color = getModelColor(item.model); // Get the specific color
-            const unitPrice = parseInt(item.price.replace(/[₹,]/g, ''));
-            const subtotal = unitPrice * item.quantity;
-            const displayModel = (item.model === 'Base' || item.model == 'L' || item.model == 'X') ? (item.model === 'Base') ? `${item.year}` : `${item.year}${item.model}` :item.model.toUpperCase();
+    const color = getDisplayColor(item); // Uses the updated helper above
+    const unitPrice = parseInt(item.price.replace(/[₹,]/g, ''));
+    const subtotal = unitPrice * item.quantity;
+    
+    // Label logic for peripherals vs devices
+    const subLabel = item.type === 'epsilon' ? item.category.toUpperCase() : item.type.toUpperCase();
+    const displayModel = (item.model === 'Base' || item.model == 'L' || item.model == 'X') ? (item.model === 'Base' ? `${item.year}` : `${item.year}${item.model}`) : item.model.toUpperCase();
 
-
-            list.innerHTML += `<div class="summary-item">
-<div class="item-thumb" style="border-left-color: ${color}"></div>                <div class="item-info">
-<h4 style="margin:0; font-size:13px; letter-spacing:1px; color:#fff;">${displayModel}</h4>                    <p style="margin:0; font-size:10px; color:#555;">${item.type.toUpperCase()} | QTY: ${item.quantity}</p>
-                </div>
-                <div style="margin-left:auto; font-size:13px;">₹${(parseInt(item.price.replace(/[₹,]/g, '')) * item.quantity).toLocaleString()}</div>
-            </div>`;
-        });
+    list.innerHTML += `<div class="summary-item">
+        <div class="item-thumb" style="border-left-color: ${color}"></div>
+        <div class="item-info">
+            <h4 style="margin:0; font-size:13px; letter-spacing:1px; color:#fff;">${displayModel}</h4>
+            <p style="margin:0; font-size:10px; color:#555;">${subLabel} | QTY: ${item.quantity}</p>
+        </div>
+        <div style="margin-left:auto; font-size:13px;">₹${subtotal.toLocaleString()}</div>
+    </div>`;
+});
         calculateTotals();
         document.querySelectorAll('input').forEach(i => i.addEventListener('input', validate));
         document.getElementById('custom-donation-input').addEventListener('input', function() {
@@ -370,26 +379,48 @@ function getModelColor(model) {
         invBody.innerHTML = '';
 
         bagData.forEach((item, index) => {
-            let specs = "";
-            const modelDisplay = (item.model === 'Base' || item.model == 'L' || item.model == 'X') 
+    let specs = "";
+    // Primary Title Logic: Epsilon [Model] or [Year][Model]
+    const modelDisplay = (item.model === 'Base' || item.model == 'L' || item.model == 'X') 
         ? (item.model === 'Base' ? `${item.year}` : `${item.year}${item.model}`) 
         : item.model.toUpperCase();
-            // Replicating manifest display logic for the invoice
-            if (item.type.toLowerCase() === 'deltop') {
-                const thetaLine = item.theta ? `${item.theta}` : '';
-                specs = `Finish: ${item.color} | Body: ${item.size} | Engine: ${item.zeta} ${thetaLine} ${item.ram}/${item.ssd}`;
-            } else {
-                specs = `Finish: ${item.color} | Engine: ${item.engine} | UMG: ${item.umg}`;
-            }
+    
+    const primaryTitle = item.type === 'epsilon' ? `${modelDisplay}` : `${item.type.toUpperCase()} ${modelDisplay}`;
 
-            invBody.innerHTML += `<tr>
-                <td style="text-align:center">${index + 1}</td>
-                <td><strong style="font-size:12px;">${item.type.toUpperCase()} ${modelDisplay}</strong><br><span class="spec-line">${specs}</span></td>
-                <td style="text-align:right">${item.price}</td>
-                <td style="text-align:center">${item.quantity}</td>
-                <td style="text-align:right">₹${(parseInt(item.price.replace(/[₹,]/g, '')) * item.quantity).toLocaleString()}</td>
-            </tr>`;
-        });
+    if (item.type === 'epsilon') {
+        const parts = item.color.split(' '); 
+        const categoryLabel = item.category.charAt(0).toUpperCase() + item.category.slice(1);
+        
+        // Spec Line Logic for Peripherals
+        let detailLine = "";
+        if (item.category === 'monitor') {
+            detailLine = `Screen Size: ${parts[0]} | Resolution: ${parts[1]} | Refresh Rate: ${parts[2]}`;
+        } else if (item.category === 'keyboard') {
+            detailLine = `Form Factor: ${parts[0]} | Switch Type: ${parts[1]}`;
+        } else if (item.category === 'mouse') {
+            detailLine = `Sensor Class: ${item.color}`;
+        } else if (item.category === 'earset') {
+            detailLine = `Acoustic Type: ${item.color}`;
+        } else if (item.category === 'mic') {
+            detailLine = `Transducer: ${item.color}`;
+        }
+        specs = `Type: ${categoryLabel} | ${detailLine}`;
+        
+    } else if (item.type === 'deltop') {
+        const thetaLine = item.theta ? `| ${item.theta}` : '';
+        specs = `Finish: ${item.color} | Body: ${item.size} | Engine: ${item.zeta} ${thetaLine} | Mem: ${item.ram}/${item.ssd}`;
+    } else {
+        specs = `Finish: ${item.color} | Engine: ${item.engine} | UMG: ${item.umg}`;
+    }
+
+    invBody.innerHTML += `<tr>
+        <td style="text-align:center">${index + 1}</td>
+        <td><strong style="font-size:11px;">${primaryTitle}</strong><br><span class="spec-line">${specs}</span></td>
+        <td style="text-align:right">${item.price}</td>
+        <td style="text-align:center">${item.quantity}</td>
+        <td style="text-align:right">₹${(parseInt(item.price.replace(/[₹,]/g, '')) * item.quantity).toLocaleString()}</td>
+    </tr>`;
+});
 
         document.getElementById('inv-sub').innerText = document.getElementById('subtotal').innerText;
         document.getElementById('inv-tax').innerText = document.getElementById('tax-amount').innerText;
