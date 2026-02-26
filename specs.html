@@ -17,6 +17,12 @@
             --accent-x-series: #dc143c;
             --bullet: #DEDEDE;
             --text-dim: #888;
+            /* Add to :root */
+            --accent-epsilon: #00f2ff;
+            --accent-keyboard: #ff00ff;
+            --accent-mouse: #ffcc00;
+            --accent-audio: #ababab;
+            --accent-mic: #cd7f32;
         }
 
         * { box-sizing: border-box; cursor: default; }
@@ -230,6 +236,15 @@
             background-color: rgba(255, 255, 255, 0.1);
             border-color: #fff !important;
         }
+
+        /* Specific Peripheral Bullet Colors */
+.epsilon-display-card .spec-list li::before { color: var(--accent-epsilon); }
+.epsilon-type-card .spec-list li::before { color: var(--accent-keyboard); }
+.epsilon-click-card .spec-list li::before { color: var(--accent-mouse); }
+.epsilon-listen-card .spec-list li::before { color: var(--accent-audio); }
+.epsilon-voice-card .spec-list li::before { color: var(--accent-mic); }
+
+
     </style>
 </head>
 <body>
@@ -245,7 +260,7 @@
 
         <section class="category-section" id="deltop">
             <h2 class="category-title">Deltop</h2>
-            <div class="spec-card port-card" data-search="port zeta upsilon multitasking battery">
+            <div class="spec-card port-card" id = "port" data-search="port zeta upsilon multitasking battery">
                 <details>
                     <summary><div class="model-name" style="color: var(--accent-port);">Port</div></summary>
                     <div style="margin-top: 20px;">
@@ -267,7 +282,7 @@
                     <div style="margin-top: 20px;">
                         <ul class="spec-list">
                             <li>Features a minimalistic and performance-first design, making it the <span class="highlight">ultimate gaming-on-the-go machine</span>.</li>
-                            <li>Powered by our ‘Zeta H/H+’ CPUs (<a href="#zeta" class="zeta-link">check Zeta for more</a>) and ‘Theta U/U+’ GPUs (<a href="#theta" class="zeta-link">check Theta for more</a>) for intensive creative work.</li>
+                            <li>Powered by our ‘Zeta H/H+’ CPUs (<a href="#zetag" class="zeta-link">check Zeta for more</a>) and ‘Theta U/U+’ GPUs (<a href="#thetag" class="zeta-link">check Theta for more</a>) for intensive creative work.</li>
                             <li>Equipped with our high-end <span class="highlight">Upsilon Display</span> along with higher refresh rate calibrated for gaming.</li>
                             <li>Provided a tactile-feel key clicks as well as smooth-rolling trackpads with over eight points of precision.</li>
                             <li>Includes effective <span class="highlight">liquid-metal cooling</span> with an open-chamber thermal management preventing throttling.</li>
@@ -283,7 +298,7 @@
                     <div style="margin-top: 20px;">
                         <ul class="spec-list">
                             <li>Features an aesthetic-harmony design that is meant to blend within any existing environment.</li>
-                            <li>Powered by our ‘Zeta X/X+’ CPUs (<a href="#zeta" class="zeta-link">check Zeta for more</a>) and ‘Theta X/X+’ GPUs (<a href="#theta" class="zeta-link">check Theta for more</a>) providing the <span class="highlight">highest-performance</span>.</li>
+                            <li>Powered by our ‘Zeta X/X+’ CPUs (<a href="#zetag" class="zeta-link">check Zeta for more</a>) and ‘Theta X/X+’ GPUs (<a href="#thetag" class="zeta-link">check Theta for more</a>) providing the <span class="highlight">highest-performance</span>.</li>
                             <li>Uses our lab-calibrated advanced fan design to remain as whisper-quiet imaginable even under heavy performance tasks.</li>
                             <li>Includes an array of high-speed I/O ports like <span class="highlight">multiple Thunderbolt 4</span>, USB 3.0, 20Gb Ethernet and high-bandwidth HDMI ports.</li>
                             <li>Allows easy semi-upgradable supports for UMGs as well as open-design allowing user to interact with the inner hardware.</li>
@@ -329,7 +344,7 @@
                 </details>
             </div>
 
-            <div class="spec-card x-card" data-search="x series zeta upsilon camera telephoto dslr battery">
+            <div class="spec-card x-card" id = "xer" data-search="x series zeta upsilon camera telephoto dslr battery">
                 <details>
                     <summary><div class="model-name" style="color: var(--accent-x-series);">X Series</div></summary>
                     <div style="margin-top: 20px;">
@@ -346,9 +361,96 @@
             </div>
         </section>
 
+    
+
+<section class="category-section" id="peripherals">
+    <h2 class="category-title">Peripherals</h2>
+
+    <div class="spec-card epsilon-display-card" data-search="peripherals display monitor miniled 5:4 hdr brightness">
+        <details>
+            <summary><div class="model-name" style="color: var(--accent-epsilon);">Epsilon Display</div></summary>
+            <div style="margin-top: 20px;">
+                <ul class="spec-list">
+                    <li>Features a productivity-focused <span class="highlight">5:4 aspect ratio</span>.</li>
+                    <li>Coated with <span class="highlight">UPF Glass</span> (Upsilon Pico Finish); nano-etched at a picometer scale to eliminate glare while preserving contrast and color accuracy.</li>
+                    <li>Utilizes our flagship <span class="highlight">Upsilon+ MiniLED</span> tech found in <a href="#port" class="zeta-link">Deltop Port</a> and <a href="#xer" class="zeta-link">Alphone X</a>.</li>
+                    <li>Extreme luminance: 2000 nits full-screen and <span class="highlight">10,000 nits peak brightness</span>.</li>
+                    <li>Cinema-grade 16-bit HDR depth supporting over 1 billion colors.</li>
+                    <li>Integrated high-fidelity 8-speaker front-facing system for immersive audio.</li>
+                    <li>Universal compatibility with both table stands and VESA arm mounts.</li>
+                </ul>
+            </div>
+        </details>
+    </div>
+
+    <div class="spec-card epsilon-type-card" data-search="peripherals type keyboard pbt mechanical wireless bluetooth">
+        <details>
+            <summary><div class="model-name" style="color: var(--accent-keyboard);">Epsilon Type</div></summary>
+            <div style="margin-top: 20px;">
+                <ul class="spec-list">
+                    <li>Equipped with custom <span class="highlight">PBT hot-swappable Upsilon switches</span> for ultimate customization.</li>
+                    <li>Tri-mode connectivity: Ultra-low latency wired, Bluetooth, or high-speed Wi-Fi/Dongle.</li>
+                    <li>Chiseled from a single block of <span class="highlight">premium aluminum</span>.</li>
+                    <li>Includes an ergonomic magnetic hand rest for extended sessions.</li>
+                </ul>
+            </div>
+        </details>
+    </div>
+
+    <div class="spec-card epsilon-click-card" data-search="peripherals click mouse dpi wireless programmable">
+        <details>
+            <summary><div class="model-name" style="color: var(--accent-mouse);">Epsilon Click</div></summary>
+            <div style="margin-top: 20px;">
+                <ul class="spec-list">
+                    <li>8 fully programmable macro buttons for complex workflows.</li>
+                    <li>Precision sensor with a massive <span class="highlight">50 to 50,000 DPI range</span>.</li>
+                    <li>Universal connection via Bluetooth, Wi-Fi dongle, or USB-C wired mode.</li>
+                    <li>Ultralight chassis with optional modular weights for personal balancing.</li>
+                </ul>
+            </div>
+        </details>
+    </div>
+
+    <div class="spec-card epsilon-listen-card" data-search="peripherals listen headphones anc battery translation audio">
+        <details>
+            <summary><div class="model-name" style="color: var(--accent-audio);">Epsilon Listen</div></summary>
+            <div style="margin-top: 20px;">
+                <ul class="spec-list">
+                    <li>Advanced <span class="highlight">Active Noise Cancellation (ANC)</span> with Adaptive Voice transparency.</li>
+                    <li>Hybrid connectivity: High-fidelity wired or seamless Bluetooth.</li>
+                    <li>Rapid power: 50 hours of playback from a <span class="highlight">30-minute charge</span>.</li>
+                    <li>Ruggedized IP-rated resistance against dust, sweat, and water.</li>
+                    <li>On-device <span class="highlight">Live Translation</span> via the integrated Adaptive Voice System.</li>
+                </ul>
+            </div>
+        </details>
+    </div>
+
+    <div class="spec-card epsilon-voice-card" data-search="peripherals voice microphone xlr usb noise cancellation">
+        <details>
+            <summary><div class="model-name" style="color: var(--accent-mic);">Epsilon Voice</div></summary>
+            <div style="margin-top: 20px;">
+                <ul class="spec-list">
+                    <li>Studio-grade background noise cancellation for crystal clear input.</li>
+                    <li>Professional I/O: Supports <span class="highlight">USB, XLR, and Wireless</span> (Bluetooth/Dongle/Wi-Fi).</li>
+                    <li>Control-centric design with three fully programmable tactile knobs.</li>
+                    <li>Multi-device support for complex XLR audio routing.</li>
+                    <li>Minimalist aesthetics with a single programmable status LED.</li>
+                    <li>Includes a weighted metal base with threaded mount and boom arm support.</li>
+                </ul>
+            </div>
+        </details>
+    </div>
+</section>
+
+
+
+
+
+
         <section class="category-section" id="zeta">
-            <!-- <h2 class="category-title" style="color: var(--neon-zeta);">Zeta Engine</h2> -->
-            <div class="spec-card zeta-card">
+            <h2 class="category-title" style="color: var(--neon-zeta);">Components</h2>
+            <div class="spec-card zeta-card" id="zetag">
                 <details>
                     <summary><div class="model-name" style="color: var(--bullet);">Zeta Architecture</div></summary>
                     <div style="margin-top: 20px;">
@@ -365,11 +467,8 @@
                     </div>
                 </details>
             </div>
-        </section>
-        
-        <section class="category-section" id="theta">
-            <!-- <h2 class="category-title" style="color: var(--bullet);">Theta Engine</h2> -->
-            <div class="spec-card theta-card">
+
+              <div class="spec-card theta-card" id="thetag">
                 <details>
                     <summary><div class="model-name" style="color: var(--bullet);">Theta Graphics</div></summary>
                     <div style="margin-top: 20px;">
@@ -382,11 +481,8 @@
                     </div>
                 </details>
             </div>
-        </section>
 
-        <section class="category-section" id="umg">
-            <!-- <h2 class="category-title">Unified Memory Gigs</h2> -->
-            <div class="spec-card">
+                <div class="spec-card">
                 <details>
                     <summary><div class="model-name" style="color: #fff;">UMG Technology</div></summary>
                     <div style="margin-top: 20px;">
@@ -396,9 +492,7 @@
                     </div>
                 </details>
             </div>
-        </section>
 
-       <section class="category-section" id="lambda-os">
             <div class="spec-card theta-card" data-search="lambda os arch linux de desktop environment kappa package manager eta wine proton gaming ai privacy">
                 <details>
                     <summary><div class="model-name" style="color: var(--bullet);">Lambda OS</div></summary>
@@ -420,7 +514,9 @@
                     </div>
                 </details>
             </div>
+
         </section>
+        
 
     </div>
 
@@ -447,17 +543,23 @@
         });
 
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if(target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-                    // If target is inside a details, open it
-                    const details = target.querySelector('details');
-                    if(details) details.open = true;
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const target = document.querySelector(targetId);
+            
+            if(target) {
+                // Scroll to the card
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // Logic to open the details if the link points to a card
+                const details = target.closest('.spec-card')?.querySelector('details') || target.querySelector('details');
+                if(details) {
+                    details.open = true;
                 }
-            });
+            }
         });
+    });
 
         const cursor = document.getElementById('custom-cursor');
         document.addEventListener('mousemove', (e) => {
