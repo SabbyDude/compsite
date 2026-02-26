@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PERIPHERALS | Identify Your Surroundings</title>
+    <style>
+        :root { 
+            --bg: #08080c; 
+            --text: #f5f5f7;
+            --glass: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            
+            /* High-Contrast Palette */
+            --color-monitor: #00f2ff;  
+            --color-keyboard: #ff00ff; 
+            --color-mouse: #ffcc00;    
+            --color-earset: #ababab;   
+            --color-mic: #cd7f32;      
+            
+            --accent: #00f2ff; 
+            --accent-dim: rgba(0, 242, 255, 0.15);
+        }
+
+        * { cursor: none !important; box-sizing: border-box; }
+        body { 
+            margin: 0; font-family: 'Inter', -apple-system, sans-serif; 
+            background: var(--bg); color: var(--text); 
+            display: flex; height: 100vh; overflow: hidden; 
+        }
+
+        /* Triangle Cursor */
+        #custom-cursor {
+            position: fixed;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 20px solid var(--accent);
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            filter: drop-shadow(0 0 5px var(--accent));
+        }
+
+        .preview-pane { 
+            flex: 1; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            background: radial-gradient(circle at 30% 50%, #101018 0%, #000 100%);
+            position: relative;
+            padding: 40px;
+        }
+
+        #v-stack { 
+            text-align: center; 
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+            max-width: 1500px;
+            will-change: transform;
+        }
+
+        .config-pane { 
+            width: 500px; padding: 60px 40px; overflow-y: auto; 
+            background: rgba(5, 5, 8, 0.9); backdrop-filter: blur(50px);
+            border-left: 1px solid var(--glass-border);
+        }
+
+        .section-header { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; letter-spacing: 3px; margin: 40px 0 15px; }
+        .product-title { font-size: 24px; font-weight: 900; letter-spacing: -1px; margin-bottom: 5px; color: #fff; }
+        
+        .requirement-toggle { display: flex; gap: 10px; margin-bottom: 20px; }
+        .toggle-btn {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            color: #444; padding: 8px 20px; font-size: 9px; font-weight: 800;
+            transition: 0.3s;
+        }
+        .toggle-btn.active { background: #fff; color: #000; border-color: #fff; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+        .btn { 
+            background: var(--glass); border: 1px solid var(--glass-border); color: #444; 
+            padding: 12px; font-size: 10px; font-weight: 600; text-transform: uppercase;
+            transition: 0.3s ease;
+        }
+
+        .grid-container.locked { opacity: 0.1; pointer-events: none; filter: blur(2px); }
+        .btn:hover:not(:disabled) { border-color: #888; color: #fff; }
+
+        .btn.active[data-cat="monitor"] { border-color: var(--color-monitor); color: var(--color-monitor); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
+        .btn.active[data-cat="keyboard"] { border-color: var(--color-keyboard); color: var(--color-keyboard); box-shadow: 0 0 15px rgba(255, 0, 255, 0.2); }
+        .btn.active[data-cat="mouse"] { border-color: var(--color-mouse); color: var(--color-mouse); box-shadow: 0 0 15px rgba(255, 204, 0, 0.2); }
+        .btn.active[data-cat="earset"] { border-color: var(--color-earset); color: var(--color-earset); box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); }
+        .btn.active[data-cat="mic"] { border-color: var(--color-mic); color: var(--color-mic); box-shadow: 0 0 15px rgba(205, 127, 50, 0.2); }
+
+        .spec-line { font-size: 22px; color: #fff; margin: 10px 0 2px; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
+        .spec-val { font-size: 14px; color: #666; margin-bottom: 25px; letter-spacing: 1px; }
+
+        .total-display { position: absolute; bottom: 60px; left: 60px; }
+        
+        /* MONOSPACE PRICING */
+        .price-tag { 
+            font-size: 48px; 
+            font-weight: 900; 
+            font-family: 'Courier New', Courier, monospace; 
+            letter-spacing: -2px; 
+        }
+
+        /* MANIFEST PILL BUTTON */
+        .manifest-btn {
+            position: absolute; bottom: 60px; right: 60px;
+            background: #fff; color: #000; border: none; 
+            padding: 22px 55px;
+            border-radius: 100px;
+            font-weight: 900; letter-spacing: 2px; transition: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            text-transform: uppercase; font-size: 12px;
+        }
+        .manifest-btn:hover:not(:disabled) { 
+            background: var(--accent); 
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 40px rgba(0, 242, 255, 0.4);
+        }
+        .manifest-btn:disabled { opacity: 0.2; transform: scale(0.95); }
+
+        /* TERMINATE SESSION GLOW */
+        .back-btn { 
+            position: absolute; top: 40px; left: 40px; color: #555; 
+            text-decoration: none; font-size: 10px; font-weight: 800; 
+            letter-spacing: 2px; z-index: 10; transition: 0.4s ease;
+        }
+        .back-btn:hover { 
+            color: #fff;
+            transform: translateX(-5px); 
+            text-shadow: 0 0 8px #fff, 0 0 15px var(--accent);
+            filter: drop-shadow(0 0 5px var(--accent));
+        }
+        
+        #toast-container { position: fixed; top: 40px; right: 40px; z-index: 10000; pointer-events: none; }
+
+.toast { 
+    background: rgba(10, 10, 10, 0.95); 
+    backdrop-filter: blur(15px); 
+    border: 1px solid #fff; /* White border as requested */
+    padding: 20px 30px; 
+    border-radius: 2px; /* Kept sharp for peripheral style */
+    display: flex; 
+    flex-direction: column; 
+    gap: 5px; 
+    min-width: 280px; 
+    transform: translateX(150%); 
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); 
+    position: relative; 
+    overflow: hidden; 
+    pointer-events: auto;
+    box-shadow: -10px 10px 30px rgba(0,0,0,0.5);
+}
+
+.toast.active { transform: translateX(0); }
+
+.toast-progress { 
+    position: absolute; 
+    bottom: 0; 
+    left: 0; 
+    height: 3px; 
+    width: 100%; 
+    background: #fff; /* White progress bar */
+    transform: scaleX(0); 
+    transform-origin: left; 
+}
+
+.toast.active .toast-progress { 
+    animation: progress 3s linear forwards; 
+}
+
+@keyframes progress { 
+    from { transform: scaleX(1); } 
+    to { transform: scaleX(0); } 
+}
+
+
+    </style>
+</head>
+<body>
+
+<div id="custom-cursor"></div>
+\
+<div id="toast-container">
+    <div id="toast" class="toast">
+        <div class="toast-title" style="font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px; font-weight: 800;">Ecosystem Update</div>
+        <div class="toast-msg" style="font-size: 12px; font-weight: 900; color: #fff; letter-spacing: 1px;">Peripherals added to Bag</div>
+        <div class="toast-progress"></div>
+    </div>
+</div>
+
+
+
+<a href="index.html" class="back-btn">← BACK TO HUB</a>
+
+<div class="preview-pane">
+    <div id="v-stack">
+        <div id="v-details"></div>
+    </div>
+
+    <div class="total-display">
+        <span style="font-size: 10px; color: #555; letter-spacing: 3px; font-weight: 800;">ESTIMATED INVESTMENT</span>
+        <div class="price-tag" id="v-price">₹0</div>
+    </div>
+    <button class="manifest-btn" id="add-btn" onclick="addToBag()">MANIFEST</button>
+</div>
+
+<div class="config-pane" id="config-target"></div>
+
+<script src="equipments.js"></script>
+<script>
+    const cursor = document.getElementById('custom-cursor');
+    document.addEventListener('mousemove', e => {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+    });
+
+    let state = {
+        monitor: { active: false, size: null, res: null, ref: null },
+        keyboard: { active: false, size: null, sw: null },
+        mouse: { active: false, type: null },
+        earset: { active: false, type: null },
+        mic: { active: false, type: null }
+    };
+
+    function renderInterface() {
+        const target = document.getElementById('config-target');
+        target.innerHTML = '';
+
+        const sections = [
+            { id: "monitor", name: "Monitor", rows: [
+                { label: "Screen Size", key: "size", options: PERIPHERAL_DATA.monitor.sizes },
+                { label: "Resolution", key: "res", options: PERIPHERAL_DATA.monitor.resolutions },
+                { label: "Refresh Rate", key: "ref", options: PERIPHERAL_DATA.monitor.refreshRates }
+            ]},
+            { id: "keyboard", name: "Keyboard", rows: [
+                { label: "Form Factor", key: "size", options: PERIPHERAL_DATA.keyboard.sizes },
+                { label: "Switch Type", key: "sw", options: PERIPHERAL_DATA.keyboard.switches }
+            ]},
+            { id: "mouse", name: "Mouse", rows: [
+                { label: "Sensor Class", key: "type", options: PERIPHERAL_DATA.mouse.types }
+            ]},
+            { id: "earset", name: "Earset", rows: [
+                { label: "Acoustic Type", key: "type", options: PERIPHERAL_DATA.earset.types }
+            ]},
+            { id: "mic", name: "Microphone", rows: [
+                { label: "Transducer", key: "type", options: PERIPHERAL_DATA.mic.types }
+            ]}
+        ];
+
+        sections.forEach(sec => target.appendChild(createSection(sec.id, sec.name, sec.rows)));
+    }
+
+    function createSection(category, name, rows) {
+        const container = document.createElement('div');
+        container.style.marginBottom = "50px";
+
+        const title = document.createElement('div');
+        title.className = 'product-title';
+        title.innerText = name;
+        container.appendChild(title);
+
+        const isActive = state[category].active;
+
+        const toggleWrap = document.createElement('div');
+        toggleWrap.className = 'requirement-toggle';
+        toggleWrap.innerHTML = `
+            <button class="toggle-btn ${!isActive ? 'active' : ''}" onclick="togglePart('${category}', false)">EXCLUDE</button>
+            <button class="toggle-btn ${isActive ? 'active' : ''}" onclick="togglePart('${category}', true)">INTEGRATE</button>
+        `;
+        container.appendChild(toggleWrap);
+
+        const gridContainer = document.createElement('div');
+        gridContainer.className = `grid-container ${!isActive ? 'locked' : ''}`;
+        
+        rows.forEach(row => {
+            const label = document.createElement('div');
+            label.className = 'section-header';
+            label.innerText = row.label;
+            gridContainer.appendChild(label);
+
+            const grid = document.createElement('div');
+            grid.className = 'grid';
+            
+            Object.keys(row.options).forEach(optKey => {
+                const btn = document.createElement('button');
+                btn.className = `btn ${state[category][row.key] === optKey ? 'active' : ''}`;
+                btn.setAttribute('data-cat', category);
+                btn.innerText = optKey;
+                btn.disabled = !isActive;
+                btn.onclick = () => {
+                    state[category][row.key] = optKey;
+                    updateUI();
+                    renderInterface();
+                };
+                grid.appendChild(btn);
+            });
+            gridContainer.appendChild(grid);
+        });
+
+        container.appendChild(gridContainer);
+        return container;
+    }
+
+    function togglePart(category, status) {
+        state[category].active = status;
+        if(status) {
+            if(category === 'monitor') {
+                state.monitor.size = state.monitor.size || "70cm";
+                state.monitor.res = state.monitor.res || "2500x2000";
+                state.monitor.ref = state.monitor.ref || "100Hz";
+            } else if (category === 'keyboard') {
+                state.keyboard.size = state.keyboard.size || "Full";
+                state.keyboard.sw = state.keyboard.sw || "Clicky";
+            } else {
+                state[category].type = state[category].type || Object.keys(PERIPHERAL_DATA[category].types)[0];
+            }
+        }
+        updateUI();
+        renderInterface();
+    }
+
+    function updateUI() {
+        let total = 0;
+        let html = '';
+        let activeCount = 0;
+
+        const categories = ['monitor', 'keyboard', 'mouse', 'earset', 'mic'];
+        
+        categories.forEach(cat => {
+            if(state[cat].active) {
+                activeCount++;
+                let subtotal = 0;
+                let specStr = '';
+                
+                if(cat === 'monitor') {
+                    subtotal = PERIPHERAL_DATA.monitor.sizes[state.monitor.size] + PERIPHERAL_DATA.monitor.resolutions[state.monitor.res] + PERIPHERAL_DATA.monitor.refreshRates[state.monitor.ref];
+                    specStr = `${state.monitor.size} // ${state.monitor.res} // ${state.monitor.ref}`;
+                } else if(cat === 'keyboard') {
+                    subtotal = PERIPHERAL_DATA.keyboard.sizes[state.keyboard.size] + PERIPHERAL_DATA.keyboard.switches[state.keyboard.sw];
+                    specStr = `${state.keyboard.size} // ${state.keyboard.sw}`;
+                } else {
+                    subtotal = PERIPHERAL_DATA[cat].types[state[cat].type];
+                    specStr = state[cat].type;
+                }
+                
+                total += subtotal;
+                html += `<div class="spec-line"><span style="color:var(--color-${cat}); margin-right: 15px;">—</span> ${PERIPHERAL_DATA[cat].name}</div>
+                         <div class="spec-val">${specStr}</div>`;
+            }
+        });
+
+        const stack = document.getElementById('v-stack');
+        if (activeCount > 0) {
+            const dynamicScale = Math.max(1.2, 3.5 - (activeCount * 0.4));
+            stack.style.transform = `scale(${dynamicScale})`;
+        } else {
+            stack.style.transform = `scale(1.5)`;
+        }
+
+        document.getElementById('v-price').innerText = `₹${total.toLocaleString()}`;
+        document.getElementById('v-details').innerHTML = html || `<div style="color:#222; font-size: 14px; letter-spacing: 8px; margin-top: 100px; font-weight: 900;">NO MODULES DETECTED</div>`;
+        document.getElementById('add-btn').disabled = (activeCount === 0);
+    }
+
+    function addToBag() {
+    let bag = JSON.parse(localStorage.getItem('iRhZi_bag')) || [];
+    const categories = ['monitor', 'keyboard', 'mouse', 'earset', 'mic'];
+
+    categories.forEach(cat => {
+        if(state[cat].active) {
+            let price = 0;
+            let specs = "";
+            if(cat === 'monitor') {
+                price = PERIPHERAL_DATA.monitor.sizes[state.monitor.size] + PERIPHERAL_DATA.monitor.resolutions[state.monitor.res] + PERIPHERAL_DATA.monitor.refreshRates[state.monitor.ref];
+                specs = `${state.monitor.size} ${state.monitor.res} ${state.monitor.ref}`;
+            } else if(cat === 'keyboard') {
+                price = PERIPHERAL_DATA.keyboard.sizes[state.keyboard.size] + PERIPHERAL_DATA.keyboard.switches[state.keyboard.sw];
+                specs = `${state.keyboard.size} ${state.keyboard.sw}`;
+            } else {
+                price = PERIPHERAL_DATA[cat].types[state[cat].type];
+                specs = state[cat].type;
+            }
+
+            // CRITICAL FIX: Save as type "epsilon" and include "category"
+            bag.push({
+                type: "epsilon", 
+                category: cat, // monitor, keyboard, etc.
+                model: PERIPHERAL_DATA[cat].name, // e.g., "Epsilon Display"
+                color: specs, // Using specs as the sub-label
+                price: `₹${price.toLocaleString()}`,
+                quantity: 1
+            });
+        }
+    });
+
+    localStorage.setItem('iRhZi_bag', JSON.stringify(bag));
+    
+    const toast = document.getElementById('toast');
+    toast.classList.remove('active');
+    void toast.offsetWidth; 
+    toast.classList.add('active');
+    
+    setTimeout(() => { 
+        toast.classList.remove('active'); 
+    }, 3000);
+    }
+
+    renderInterface();
+    updateUI();
+</script>
+</body>
+</html>
