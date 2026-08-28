@@ -321,22 +321,47 @@
     }
 
     function triggerManifest() {
-        const spec = ALPHONE_DATA.specs[state.model];
-        const currentConfig = { 
-            id: Date.now(), type: 'alphone', model: state.model, year: state.year,
-            color: state.color, umg: state.umg, engine: `${spec.chipPrefix}${state.year}${spec.chipSuffix || ''}`,
-            price: document.getElementById('v-price').innerText, quantity: 1
-        };
-        let bag = JSON.parse(localStorage.getItem('iRhZi_bag')) || [];
-        const existingIndex = bag.findIndex(item => item.type === currentConfig.type && item.model === currentConfig.model && item.year === currentConfig.year && item.umg === currentConfig.umg && item.color === currentConfig.color);
-        if (existingIndex > -1) { bag[existingIndex].quantity += 1; } else { bag.push(currentConfig); }
-        localStorage.setItem('iRhZi_bag', JSON.stringify(bag)); 
-        const accent = getComputedStyle(document.documentElement).getPropertyValue('--dynamic-accent');
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.9 }, colors: [accent, '#ffffff'] });
-        const toast = document.getElementById('toast');
-        toast.classList.add('active');
-        setTimeout(() => { toast.classList.remove('active'); }, 3000);
+    const spec = ALPHONE_DATA.specs[state.model];
+    const currentConfig = { 
+        type: 'alphone', 
+        model: state.model, 
+        year: state.year,
+        color: state.color, 
+        umg: state.umg, 
+        engine: `${spec.chipPrefix}${state.year}${spec.chipSuffix || ''}`,
+        price: document.getElementById('v-price').innerText
+    };
+
+    let bag = JSON.parse(localStorage.getItem('iRhZi_bag')) || [];
+
+    // Check for exact match: Model, Year, Color, and UMG
+    const existingIndex = bag.findIndex(item => 
+        item.type === currentConfig.type && 
+        item.model === currentConfig.model && 
+        item.year === currentConfig.year && 
+        item.umg === currentConfig.umg && 
+        item.color === currentConfig.color
+    );
+
+    if (existingIndex > -1) { 
+        // Logic handled: If we find it, we just store it again. 
+        // Note: index.html handles the visual summation, but we keep the flat array 
+        // or increment a quantity property if you prefer. 
+        // To keep it simple for your index.html logic:
+        bag.push(currentConfig); 
+    } else { 
+        bag.push(currentConfig); 
     }
+
+    localStorage.setItem('iRhZi_bag', JSON.stringify(bag)); 
+
+    const accent = getComputedStyle(document.documentElement).getPropertyValue('--dynamic-accent');
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.9 }, colors: [accent, '#ffffff'] });
+    
+    const toast = document.getElementById('toast');
+    toast.classList.add('active');
+    setTimeout(() => { toast.classList.remove('active'); }, 3000);
+}
 
     function goBack(e) { e.preventDefault(); document.getElementById('loader').classList.add('active'); setTimeout(() => { window.location.href = 'index.html'; }, 600); }
     window.addEventListener('pageshow', () => { document.getElementById('loader').classList.remove('active'); });
