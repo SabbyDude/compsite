@@ -31,7 +31,7 @@ const comparisonRegistry = {
 }
     },
     "chart-play-vs-gaming": {
-        title: "Gaming Performance (Avg FPS from 1080p/1440p/4k High to Ultra Setting)",
+        title: "Gaming Performance (Avg FPS from 1080p/1440p/4k on High to Ultra Setting)",
         machines: {
             "play1": "Deltop Play Z25H 6C T25U 12C 10",
             "o1": "Lenovo LOQ Ryzen 5 7235HS RTX 3050 6GB 12GB RAM",
@@ -123,7 +123,12 @@ function initCharts() {
         const container = document.getElementById(id);
         if (!container) continue;
 
-        let html = `<div class="chart-header"><span class="chart-title">${data.title}</span></div>`;
+        let html = `
+            <div style="margin-bottom: 12px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <div style="font-size: 14px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #fff;">
+                    ${data.title}
+                </div>
+            </div>`;
 
         data.benchmarks.forEach(bench => {
             const directionLabel = bench.inverse ? "Lower is Better" : "Higher is Better";
@@ -172,12 +177,4 @@ function initCharts() {
 }
 
 document.addEventListener('DOMContentLoaded', initCharts);
-
-
-
-
-
-
-
-
 
