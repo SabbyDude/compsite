@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iRhZi | Identify Your Power</title>
+    <title>DELTOP | Identify Your Power</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root { 
@@ -143,9 +143,37 @@
         .btn.swatch.active .swatch-color {
             border-right-color: var(--current-neon);
         }
+
+
+        .config-tooltip {
+    position: fixed;
+    background: rgba(10, 10, 10, 0.98);
+    border: 1px solid var(--current-neon);
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #fff;
+    pointer-events: none;
+    z-index: 99999; /* Ensure it is above the config-pane */
+    width: 220px;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    transform: translateY(10px); /* Slight lift effect */
+    box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+    text-align: center;
+}
+
+/* Add this to make it "pop" when active */
+.config-tooltip[style*="opacity: 1"] {
+    transform: translateY(0);
+}
+
+
     </style>
 </head>
 <body>
+    <div id="config-tooltip" class="config-tooltip"></div>
 <div id="custom-cursor"></div>
 <div id="loader"></div>
 
@@ -157,7 +185,7 @@
     </div>
 </div>
 
-<a href="#" class="back-btn" onclick="goBack(event)">← Back to Hub</a>
+<a href="index.html" class="back-btn" onclick="goBack(event)">← Back to Hub</a>
 
 <div class="preview-pane">
     <div class="floating-manifest">
@@ -305,31 +333,51 @@
         validateAndRender(); 
     }
 
-    function renderSizes() {
-        const header = document.getElementById('size-header');
-        const grid = document.getElementById('size-grid');
-        grid.innerHTML = '';
-        const isStation = state.model === 'Station';
-        header.innerText = isStation ? 'Chassis Form' : 'Display Architecture (cm)';
-        const sizes = iRhZi_DATA.sizeOptions[state.year][state.model];
-        
-        sizes.forEach(s => {
-            const b = document.createElement('button');
-            b.className = `btn ${state.size === s ? 'active' : ''}`;
-            b.innerText = s;
-            b.onclick = (e) => { 
-                state.size = s; 
-                updateActive(b); 
-                updateUI(); 
-            };
-            grid.appendChild(b);
+    // Add at the top of your script
+function renderSizes() {
+    const header = document.getElementById('size-header');
+    const grid = document.getElementById('size-grid');
+    const tooltip = document.getElementById('config-tooltip'); // Move reference here
+    grid.innerHTML = '';
+    
+    const isStation = state.model === 'Station';
+    header.innerText = isStation ? 'Chassis Form' : 'Display Architecture (cm)';
+    const sizes = iRhZi_DATA.sizeOptions[state.year][state.model];
+    
+    sizes.forEach(s => {
+        const b = document.createElement('button');
+        b.className = `btn ${state.size === s ? 'active' : ''}`;
+        b.innerText = s;
+
+        // Tooltip Event Listeners
+        b.addEventListener('mouseenter', () => {
+            if (isStation && iRhZi_DATA.chassisDescriptions[s]) {
+                tooltip.innerText = iRhZi_DATA.chassisDescriptions[s];
+                tooltip.style.opacity = '1';
+                
+                const rect = b.getBoundingClientRect();
+                // Centering tooltip above the button
+                tooltip.style.left = (rect.left + rect.width / 2 - 100) + 'px'; 
+                tooltip.style.top = (rect.top - 60) + 'px';
+            }
         });
 
-        if (!state.size || !sizes.includes(state.size)) {
-            grid.firstChild.click();
-        }
-    }
+        b.addEventListener('mouseleave', () => {
+            tooltip.style.opacity = '0';
+        });
 
+        b.onclick = () => { 
+            state.size = s; 
+            updateActive(b); 
+            updateUI(); 
+        };
+        grid.appendChild(b);
+    });
+
+    if (!state.size || !sizes.includes(state.size)) {
+        grid.firstChild.click();
+    }
+}
     function renderColors() {
         const grid = document.getElementById('color-grid');
         grid.innerHTML = '';
@@ -447,8 +495,8 @@
             else { rMin = (tT === 'U' ? 50 : 75); rMax = 150; sMin = (tT === 'U' ? 500 : 1000); sMax = (tT === 'U' ? 2000 : 3000); }
         } else {
             const tT = state.theta ? (state.theta.includes('+') ? 'X+' : 'X') : 'X';
-            if (zTier === 'X') { rMin = (tT === 'X' ? 100 : 150); rMax = 300; sMin = (tT === 'X' ? 1000 : 3000); sMax = (tT === 'X' ? 4000 : 6000); }
-            else { rMin = 200; rMax = (tT === 'X' ? 400 : 500); sMin = (tT === 'X' ? 4000 : 5000); sMax = (tT === 'X' ? 8000 : 10000); }
+            if (zTier === 'X') { rMin = (tT === 'X' ? 100 : 150); rMax = 300; sMin = (tT === 'X' ? 2000 : 3000); sMax = (tT === 'X' ? 4000 : 6000); }
+            else { rMin = 300; rMax = (tT === 'X' ? 1000 : 5000); sMin = (tT === 'X' ? 4000 : 5000); sMax = (tT === 'X' ? 10000 : 50000); }
         }
         renderHWGrid('ram', iRhZi_DATA.ramOptions, rMin, rMax);
         renderHWGrid('ssd', iRhZi_DATA.ssdOptions, sMin, sMax);
